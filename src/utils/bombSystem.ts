@@ -6,7 +6,7 @@ export class BombSystem {
   private lastBombTime: number = 0;
   private scene: THREE.Scene;
   private enemyBoatSystem: EnemyBoatSystem;
-
+  private explosionTexture: THREE.Texture;
   private readonly BOMB_COOLDOWN = 5000; // 5s cooldown
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
@@ -24,6 +24,11 @@ export class BombSystem {
   constructor(scene: THREE.Scene, enemyBoatSystem: EnemyBoatSystem) {
     this.scene = scene;
     this.enemyBoatSystem = enemyBoatSystem;
+
+    const textureLoader = new THREE.TextureLoader();
+    this.explosionTexture = textureLoader.load(
+      "/Explosion Transparent PNG.webp"
+    );
   }
 
   createBomb(turret: THREE.Object3D) {
@@ -53,15 +58,19 @@ export class BombSystem {
   }
 
   private createExplosion(position: THREE.Vector3) {
-    const explosionGeometry = new THREE.SphereGeometry(this.EXPLOSION_RADIUS);
-    const explosionMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff4400,
+    const explosionMaterial = new THREE.SpriteMaterial({
+      map: this.explosionTexture,
       transparent: true,
-      opacity: 0.8,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
     });
 
-    const explosion = new THREE.Mesh(explosionGeometry, explosionMaterial);
+    const explosion = new THREE.Sprite(explosionMaterial);
     explosion.position.copy(position);
+
+    const initialScale = this.EXPLOSION_RADIUS;
+    explosion.scale.set(initialScale, initialScale, 1);
+
     this.scene.add(explosion);
 
     // if (this.enemyBoatSystem) {
@@ -74,14 +83,15 @@ export class BombSystem {
     const animateExplosion = () => {
       const elapsed = performance.now() - startTime;
       const progress = elapsed / duration;
-
       if (progress >= 1) {
         this.scene.remove(explosion);
         return;
       }
 
-      explosion.material.opacity = 0.8 * (1 - progress);
-      explosion.scale.setScalar(1 + progress);
+      explosion.material.opacity = 1 - progress;
+
+      const currentScale = initialScale * (1 + progress);
+      explosion.scale.set(currentScale, currentScale, 1);
 
       requestAnimationFrame(animateExplosion);
     };
