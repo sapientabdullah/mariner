@@ -27,7 +27,7 @@ export class HealthSystem {
     overlay.style.display = "none";
 
     const overlayImage = document.createElement("img");
-    overlayImage.src = "/Health_Brush_3_4.png";
+    overlayImage.src = "/textures/health-overlay.png";
     overlayImage.className = "low-health-overlay-image";
 
     overlay.appendChild(overlayImage);

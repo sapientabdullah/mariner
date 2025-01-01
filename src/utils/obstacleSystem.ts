@@ -17,9 +17,7 @@ export class ObstacleSystem {
     this.scene = scene;
     this.collisionSound = collisionSound;
     this.textureLoader = new THREE.TextureLoader();
-    this.explosionTexture = this.textureLoader.load(
-      "/Explosion Transparent PNG.webp"
-    );
+    this.explosionTexture = this.textureLoader.load("/textures/explosion.webp");
     this.spawnObstacles();
   }
 

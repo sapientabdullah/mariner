@@ -20,7 +20,7 @@ export class WaterSpoutSystem {
     this.boatReference = boatReference;
     this.whaleSounds = whaleSounds;
     const textureLoader = new THREE.TextureLoader();
-    this.spoutTexture = textureLoader.load("/Water Fountain Texture 4K.webp");
+    this.spoutTexture = textureLoader.load("/textures/water-spout.webp");
   }
 
   private createSpout() {

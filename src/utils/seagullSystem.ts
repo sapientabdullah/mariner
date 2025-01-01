@@ -28,7 +28,7 @@ export class SeagullSystem {
 
   private loadSound() {
     const audioLoader = new AudioLoader();
-    audioLoader.load("/Seagull Sound Effect.mp3", (buffer) => {
+    audioLoader.load("/audio/seagull.mp3", (buffer) => {
       this.seagullSound = buffer;
       this.spawnSeagulls(10);
     });

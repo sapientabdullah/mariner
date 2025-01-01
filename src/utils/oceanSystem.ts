@@ -20,7 +20,7 @@ export class OceanSystem {
       textureWidth: 512,
       textureHeight: 512,
       waterNormals: new THREE.TextureLoader().load(
-        "/Water 0339.jpg",
+        "/textures/water.jpg",
         function (texture) {
           texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1000, 1000);
@@ -41,7 +41,7 @@ export class OceanSystem {
     this.oceanSound = new Audio(audioListener);
 
     const oceanAudioLoader = new AudioLoader();
-    oceanAudioLoader.load("/Gentle Ocean Waves Mix 2018.mp3", (buffer) => {
+    oceanAudioLoader.load("/audio/ocean-waves.mp3", (buffer) => {
       this.oceanSound.setBuffer(buffer);
       this.oceanSound.setLoop(true);
       this.oceanSound.setVolume(0.8);

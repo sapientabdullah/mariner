@@ -20,6 +20,7 @@ import { ReticleSystem } from "./utils/reticleSystem";
 import { BombSystem } from "./utils/bombSystem";
 import { BulletSystem } from "./utils/bulletSystem";
 import { loadingManager } from "./utils/managers/loadingManager";
+import { ScoreSystem } from "./utils/scoringSystem";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -82,6 +83,8 @@ let explosionSound: Audio;
 let whaleSounds: Audio[] = [];
 let gunSoundPool: Audio[] = [];
 let checkpointSound: Audio;
+let scoreSystem: ScoreSystem;
+scoreSystem = new ScoreSystem(scene);
 
 const reticleSystem = new ReticleSystem();
 const speedometer = new SpeedometerSystem(MAX_SPEED);
@@ -111,7 +114,7 @@ export function startGame() {
   setupEventListeners();
 }
 
-loader.load("/Tow Boat/scene.gltf", (gltf) => {
+loader.load("/models/boat/scene.gltf", (gltf) => {
   boat = gltf.scene;
   boat.scale.set(10, 10, 10);
   boat.position.set(0, 5, 0);
@@ -145,7 +148,7 @@ loader.load("/Tow Boat/scene.gltf", (gltf) => {
 
 function createTurret() {
   const turretLoader = new GLTFLoader(loadingManager);
-  turretLoader.load("/Turret (1)/scene.gltf", (gltf) => {
+  turretLoader.load("/models/turret/scene.gltf", (gltf) => {
     turret = gltf.scene;
     turret.scale.set(0.1, 0.1, 0.1);
     turret.rotation.set(0, Math.PI / 2, 0);
@@ -169,7 +172,7 @@ function setupBoatSounds() {
   engineSound = new Audio(audioListener);
 
   const engineLoader = new AudioLoader();
-  engineLoader.load("/Motorboat Sound Effect (1).mp3", function (buffer) {
+  engineLoader.load("/audio/engine-move.mp3", function (buffer) {
     engineSound.setBuffer(buffer);
     engineSound.setLoop(true);
     engineSound.setVolume(0);
@@ -178,7 +181,7 @@ function setupBoatSounds() {
 
   engineIdleSound = new Audio(audioListener);
   const idleLoader = new AudioLoader();
-  idleLoader.load("/Motorboat Idle Sound Effect.mp3", function (buffer) {
+  idleLoader.load("/audio/engine-idle.mp3", function (buffer) {
     engineIdleSound.setBuffer(buffer);
     engineIdleSound.setLoop(true);
     engineIdleSound.setVolume(0.3);
@@ -195,14 +198,14 @@ function setupBoatSounds() {
 
   collisionSound = new Audio(audioListener);
   const collisionLoader = new AudioLoader();
-  collisionLoader.load("/Collision Sound Effect.mp3", function (buffer) {
+  collisionLoader.load("/audio/collision.mp3", function (buffer) {
     collisionSound.setBuffer(buffer);
     collisionSound.setLoop(false);
     collisionSound.setVolume(0.5);
   });
 
   const gunLoader = new AudioLoader();
-  gunLoader.load("/fire.wav", function (buffer) {
+  gunLoader.load("/audio/bullet-fire.wav", function (buffer) {
     for (let i = 0; i < GUNSHOT_POOL_SIZE; i++) {
       const sound = new Audio(audioListener);
       sound.setBuffer(buffer);
@@ -214,16 +217,13 @@ function setupBoatSounds() {
 
   checkpointSound = new Audio(audioListener);
   const checkpointLoader = new AudioLoader();
-  checkpointLoader.load("/Confirmation Sound Effect.mp3", function (buffer) {
+  checkpointLoader.load("/audio/checkpoint.mp3", function (buffer) {
     checkpointSound.setBuffer(buffer);
     checkpointSound.setLoop(false);
     checkpointSound.setVolume(0.5);
   });
 
-  const whaleFiles = [
-    "/Whale Sound Effect 154723.mp3",
-    "/Whale Sound Type 1.mp3",
-  ];
+  const whaleFiles = ["/audio/whale-1.mp3", "/audio/whale-2.mp3"];
 
   whaleFiles.forEach((soundFile) => {
     const whaleSound = new Audio(audioListener);
@@ -238,7 +238,7 @@ function setupBoatSounds() {
 
   explosionSound = new Audio(audioListener);
   const explosionLoader = new AudioLoader();
-  explosionLoader.load("/Explosion Sound Effect.mp3", function (buffer) {
+  explosionLoader.load("/audio/explosion.mp3", function (buffer) {
     explosionSound.setBuffer(buffer);
     explosionSound.setLoop(false);
     explosionSound.setVolume(0.8);
@@ -246,7 +246,7 @@ function setupBoatSounds() {
 }
 
 function updateBoatSounds(deltaTime: number) {
-  if (!boat) return;
+  if (!boat || isPaused) return;
 
   if (engineSound && engineSound.isPlaying) {
     const targetVolume = Math.abs(currentSpeed) / MAX_SPEED;
@@ -286,6 +286,10 @@ function animate(time: number) {
 
   let deltaTime = (time - lastTime) / 1000;
   deltaTime = Math.min(deltaTime, MAX_DELTA_TIME);
+
+  if (scoreSystem) {
+    scoreSystem.update(deltaTime);
+  }
 
   lastTime = time;
 
@@ -341,7 +345,7 @@ function animate(time: number) {
 
   if (boat) {
     if (checkpointSystem) {
-      checkpointSystem.update(boat.position, deltaTime);
+      checkpointSystem.update(boat.position, deltaTime, scoreSystem);
     }
 
     obstacleSystem.update(deltaTime, boat);

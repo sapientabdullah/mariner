@@ -1,7 +1,7 @@
 import * as THREE from "three";
 const textureLoader = new THREE.TextureLoader();
 
-const muzzleFlashTexture = textureLoader.load("/muzzle-flash.png");
+const muzzleFlashTexture = textureLoader.load("/textures/muzzle-flash.png");
 
 export function createMuzzleFlash(gun: THREE.Object3D) {
   const flashGeometry = new THREE.PlaneGeometry(5, 5);

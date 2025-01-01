@@ -23,12 +23,11 @@ loadingManager.onLoad = () => {
   isLoading = false;
   document.getElementById("loading-screen")?.remove();
 
-  // setTimeout(() => {
-  //   const interfaceElement = document.getElementById("controls");
-  //   if (interfaceElement) {
-  //     interfaceElement.classList.remove("hidden");
-  //   }
-  // }, 1000);
+  // const interfaceElement = document.getElementById("controls");
+  // if (interfaceElement) {
+  //   interfaceElement.classList.remove("hidden");
+  // }
+
   startGame();
 };
 

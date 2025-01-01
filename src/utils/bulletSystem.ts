@@ -15,7 +15,7 @@ export class BulletSystem {
   private readonly BULLET_SIZE = 0.5;
   private readonly FIRE_RATE = 0.1;
   private readonly BULLET_LIFETIME = 3;
-  private readonly MUZZLE_OFFSET = 5;
+  private readonly MUZZLE_OFFSET = 50;
   private readonly BULLET_TRAIL_LENGTH = 10;
   private readonly GRAVITY = -9.81;
   private readonly GUNSHOT_POOL_SIZE = 5;
@@ -32,7 +32,7 @@ export class BulletSystem {
     this.scene = scene;
     this.oceanWaterLevel = oceanWaterLevel;
     this.textureLoader = new THREE.TextureLoader();
-    this.splashTexture = this.textureLoader.load("/Water Splash.png");
+    this.splashTexture = this.textureLoader.load("/textures/bullet-splash.png");
     this.bulletGeometry = new THREE.SphereGeometry(this.BULLET_SIZE);
     this.bulletMaterial = new THREE.MeshStandardMaterial({
       color: 0xff7700,
@@ -69,7 +69,7 @@ export class BulletSystem {
     turret.getWorldPosition(turretWorldPos);
 
     const turretQuaternion = turret.getWorldQuaternion(new THREE.Quaternion());
-    const muzzleOffset = new THREE.Vector3(0, 0, this.MUZZLE_OFFSET);
+    const muzzleOffset = new THREE.Vector3(0, 10, this.MUZZLE_OFFSET);
     muzzleOffset.applyQuaternion(turretQuaternion);
 
     bullet.position.copy(turretWorldPos).add(muzzleOffset);

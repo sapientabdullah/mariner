@@ -17,7 +17,7 @@ export class StaticObjectSystem {
 
   private createIsland() {
     const islandLoader = new GLTFLoader();
-    islandLoader.load("/Vulcano Italy 3D Model.glb", (gltf) => {
+    islandLoader.load("/models/island.glb", (gltf) => {
       this.island = gltf.scene;
 
       this.island.scale.set(2, 2, 2);
@@ -37,7 +37,7 @@ export class StaticObjectSystem {
 
   private createLighthouse() {
     const lighthouseLoader = new GLTFLoader();
-    lighthouseLoader.load("/Reykjanes Lighthouse 3D Model.glb", (gltf) => {
+    lighthouseLoader.load("/models/lighthouse.glb", (gltf) => {
       this.lighthouse = gltf.scene;
 
       this.lighthouse.scale.set(100, 100, 100);

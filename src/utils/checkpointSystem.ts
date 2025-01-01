@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ScoreSystem } from "./scoringSystem";
 
 export class CheckpointSystem {
   private checkpoints: THREE.Vector3[] = [];
@@ -169,7 +170,11 @@ export class CheckpointSystem {
     sprite.material.needsUpdate = true;
   }
 
-  public update(boatPosition: THREE.Vector3, deltaTime: number): number {
+  public update(
+    boatPosition: THREE.Vector3,
+    deltaTime: number,
+    scoreSystem: ScoreSystem
+  ): number {
     this.timeRemaining -= deltaTime;
     this.updateTimeSprite();
 
@@ -186,6 +191,10 @@ export class CheckpointSystem {
     }
 
     if (distanceToCheckpoint < this.CHECKPOINT_RADIUS) {
+      if (scoreSystem) {
+        scoreSystem.addCheckpointScore(currentCheckpoint, this.timeRemaining);
+      }
+
       if (this.currentCheckpointMesh) {
         this.scene.remove(this.currentCheckpointMesh);
         this.currentCheckpointMesh = null;

@@ -22,9 +22,7 @@ export class SharkSystem {
   private async spawnShark() {
     const loader = new GLTFLoader(loadingManager);
     try {
-      const gltf = await loader.loadAsync(
-        "/Great White Shark Low Poly/scene.gltf"
-      );
+      const gltf = await loader.loadAsync("/models/shark/scene.gltf");
       const shark = gltf.scene;
       shark.scale.set(15, 15, 15);
 

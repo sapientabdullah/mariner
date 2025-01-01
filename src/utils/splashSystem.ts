@@ -8,7 +8,7 @@ export class WaterSplashSystem {
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.splashTexture = new THREE.TextureLoader().load(
-      "/Boat Splash Night.png"
+      "/textures/boat-splash.png"
     );
   }
 

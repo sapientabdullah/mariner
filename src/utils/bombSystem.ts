@@ -31,9 +31,7 @@ export class BombSystem {
     this.enemyBoatSystem = enemyBoatSystem;
     this.explosionSound = explosionSound;
     const textureLoader = new THREE.TextureLoader();
-    this.explosionTexture = textureLoader.load(
-      "/Explosion Transparent PNG.webp"
-    );
+    this.explosionTexture = textureLoader.load("/textures/explosion.webp");
   }
 
   createBomb(turret: THREE.Object3D) {
