@@ -7,6 +7,7 @@ export class BombSystem {
   private scene: THREE.Scene;
   private enemyBoatSystem: EnemyBoatSystem;
   private explosionTexture: THREE.Texture;
+  private explosionSound: THREE.Audio;
   private readonly BOMB_COOLDOWN = 5000; // 5s cooldown
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
@@ -21,10 +22,14 @@ export class BombSystem {
     roughness: 0.2,
   });
 
-  constructor(scene: THREE.Scene, enemyBoatSystem: EnemyBoatSystem) {
+  constructor(
+    scene: THREE.Scene,
+    enemyBoatSystem: EnemyBoatSystem,
+    explosionSound: THREE.Audio
+  ) {
     this.scene = scene;
     this.enemyBoatSystem = enemyBoatSystem;
-
+    this.explosionSound = explosionSound;
     const textureLoader = new THREE.TextureLoader();
     this.explosionTexture = textureLoader.load(
       "/Explosion Transparent PNG.webp"
@@ -95,6 +100,11 @@ export class BombSystem {
 
       requestAnimationFrame(animateExplosion);
     };
+
+    // Play sound before animation starts
+    if (this.explosionSound && !this.explosionSound.isPlaying) {
+      this.explosionSound.play();
+    }
 
     animateExplosion();
   }

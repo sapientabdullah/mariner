@@ -1,6 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { GLTFLoader, OrbitControls } from "three/examples/jsm/Addons.js";
 import { Audio, AudioLoader } from "three";
 import { SeagullSystem } from "./utils/seagullSystem";
 import { WaterSplashSystem } from "./utils/splashSystem";
@@ -19,10 +19,35 @@ import { HealthSystem } from "./utils/ui/healthSystem";
 import { ReticleSystem } from "./utils/reticleSystem";
 import { BombSystem } from "./utils/bombSystem";
 import { BulletSystem } from "./utils/bulletSystem";
-import { threeManager } from "./utils/managers/threeManager";
 import { loadingManager } from "./utils/managers/loadingManager";
 
-const { scene, camera, renderer, controls, audioListener } = threeManager;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  55,
+  window.innerWidth / window.innerHeight,
+  1,
+  20000
+);
+camera.position.set(30, 30, 100);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.5;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.target.set(0, 10, 0);
+controls.minDistance = 40.0;
+controls.maxDistance = 200.0;
+controls.update();
+
+const audioListener = new THREE.AudioListener();
+camera.add(audioListener);
 
 let animationFrameId: number;
 
@@ -53,6 +78,7 @@ let engineSound: Audio;
 let engineIdleSound: Audio;
 let waterSplashSound: Audio;
 let collisionSound: Audio;
+let explosionSound: Audio;
 let whaleSounds: Audio[] = [];
 let gunSoundPool: Audio[] = [];
 let checkpointSound: Audio;
@@ -78,16 +104,10 @@ const keysPressed: { [key: string]: boolean } = {};
 
 export function startGame() {
   setupBoatSounds();
-
   lastTime = performance.now();
-
   cancelAnimationFrame(animationFrameId);
-
-  threeManager.start();
-
   isPaused = false;
   animate(performance.now());
-
   setupEventListeners();
 }
 
@@ -108,7 +128,7 @@ loader.load("/Tow Boat/scene.gltf", (gltf) => {
     handleGameOver();
   });
   enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat);
-  bombSystem = new BombSystem(scene, enemyBoatSystem);
+  bombSystem = new BombSystem(scene, enemyBoatSystem, explosionSound);
   sharkSystem = new SharkSystem(scene, boat);
   waterSpoutSystem = new WaterSpoutSystem(scene, boat, whaleSounds);
   checkpointSystem = new CheckpointSystem(scene, checkpointSound, () => {
@@ -214,6 +234,14 @@ function setupBoatSounds() {
       whaleSound.setVolume(0.5);
     });
     whaleSounds.push(whaleSound);
+  });
+
+  explosionSound = new Audio(audioListener);
+  const explosionLoader = new AudioLoader();
+  explosionLoader.load("/Explosion Sound Effect.mp3", function (buffer) {
+    explosionSound.setBuffer(buffer);
+    explosionSound.setLoop(false);
+    explosionSound.setVolume(0.8);
   });
 }
 
@@ -491,7 +519,7 @@ function animate(time: number) {
 
   oceanSystem.update();
   skySystem.update(camera);
-  threeManager.render();
+  renderer.render(scene, camera);
   animationFrameId = requestAnimationFrame(animate);
 }
 
@@ -612,10 +640,8 @@ function resumeMainAudio() {
 
 function handleGamePause() {
   cancelAnimationFrame(animationFrameId);
-  threeManager.stop();
   pauseAllAudio();
   togglePauseUI(true);
-
   bulletSystem.cleanup();
 
   if (bombSystem) {
@@ -627,7 +653,6 @@ function handleGameResume() {
   cancelAnimationFrame(animationFrameId);
   lastTime = performance.now();
   isPaused = false;
-  threeManager.start();
   animate(performance.now());
   resumeMainAudio();
   togglePauseUI(false);
@@ -651,6 +676,7 @@ function togglePause() {
 
 function setupEventListeners() {
   window.addEventListener("resize", () => {
+    handleResize();
     reticleSystem.handleResize();
   });
 
@@ -738,4 +764,10 @@ function handleGameOver() {
   if (healthSystem) {
     healthSystem.reset();
   }
+}
+
+function handleResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
