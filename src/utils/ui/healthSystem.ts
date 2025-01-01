@@ -7,7 +7,9 @@ export class HealthSystem {
   private readonly REGEN_DELAY: number = 5000;
   private readonly DAMAGE_COOLDOWN: number;
   private lowHealthOverlay: HTMLElement | null;
+  private damageOverlay: HTMLElement | null;
   private readonly LOW_HEALTH_THRESHOLD: number = 30;
+  private readonly DAMAGE_FLASH_DURATION: number = 200;
 
   constructor(maxHealth: number = 100, onGameOver: () => void) {
     this.maxHealth = maxHealth;
@@ -18,7 +20,43 @@ export class HealthSystem {
     this.DAMAGE_COOLDOWN = 1000;
     this.createHealthBar();
     this.lowHealthOverlay = null;
+    this.damageOverlay = null;
     this.createLowHealthOverlay();
+    this.createDamageOverlay();
+  }
+
+  private createDamageOverlay(): void {
+    const overlay = document.createElement("div");
+    overlay.className = "damage-overlay";
+
+    const overlayImage = document.createElement("img");
+    overlayImage.src = "/textures/damage-overlay.png";
+    overlayImage.className = "damage-overlay-image";
+
+    overlay.appendChild(overlayImage);
+    document.body.appendChild(overlay);
+    this.damageOverlay = overlay;
+  }
+
+  private showDamageOverlay(): void {
+    if (!this.damageOverlay) return;
+
+    this.damageOverlay.style.display = "block";
+    this.damageOverlay.style.opacity = "0.8";
+
+    this.damageOverlay.style.transition = `opacity ${this.DAMAGE_FLASH_DURATION}ms ease-out`;
+
+    requestAnimationFrame(() => {
+      if (this.damageOverlay) {
+        this.damageOverlay.style.opacity = "0";
+      }
+    });
+
+    setTimeout(() => {
+      if (this.damageOverlay) {
+        this.damageOverlay.style.display = "none";
+      }
+    }, this.DAMAGE_FLASH_DURATION);
   }
 
   private createLowHealthOverlay(): void {
@@ -42,7 +80,6 @@ export class HealthSystem {
 
     if (healthPercent <= this.LOW_HEALTH_THRESHOLD) {
       this.lowHealthOverlay.style.display = "block";
-      // Calculate opacity based on health (more visible as health decreases)
       const opacity =
         (this.LOW_HEALTH_THRESHOLD - healthPercent) / this.LOW_HEALTH_THRESHOLD;
       this.lowHealthOverlay.style.opacity = opacity.toString();
@@ -109,6 +146,7 @@ export class HealthSystem {
 
     this.currentHealth = Math.max(0, this.currentHealth - amount);
     this.updateHealthBar();
+    this.showDamageOverlay();
 
     if (this.currentHealth <= 0) {
       this.onGameOver();
@@ -150,6 +188,9 @@ export class HealthSystem {
     }
     if (this.lowHealthOverlay) {
       document.body.removeChild(this.lowHealthOverlay);
+    }
+    if (this.damageOverlay) {
+      document.body.removeChild(this.damageOverlay);
     }
   }
 }
