@@ -27,7 +27,7 @@ export class BulletSystem {
   constructor(
     scene: THREE.Scene,
     oceanWaterLevel: number,
-    gunSoundPool: THREE.Audio[]
+    camera: THREE.Camera
   ) {
     this.scene = scene;
     this.oceanWaterLevel = oceanWaterLevel;
@@ -46,7 +46,28 @@ export class BulletSystem {
       opacity: 0.5,
     });
 
-    this.gunSoundPool = gunSoundPool;
+    this.initializeSounds(camera);
+  }
+
+  private async initializeSounds(camera: THREE.Camera) {
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const audioLoader = new THREE.AudioLoader();
+
+    try {
+      const buffer = await audioLoader.loadAsync("/audio/bullet-fire.wav");
+
+      for (let i = 0; i < this.GUNSHOT_POOL_SIZE; i++) {
+        const sound = new THREE.Audio(listener);
+        sound.setBuffer(buffer);
+        sound.setLoop(false);
+        sound.setVolume(0.3);
+        this.gunSoundPool.push(sound);
+      }
+    } catch (error) {
+      console.error("Error loading gunshot sounds:", error);
+    }
   }
 
   public canFire(): boolean {
@@ -229,6 +250,10 @@ export class BulletSystem {
   cleanup() {
     this.bullets.forEach((bullet) => this.scene.remove(bullet));
     this.bullets = [];
+    this.gunSoundPool.forEach((sound) => {
+      sound.disconnect();
+    });
+    this.gunSoundPool = [];
   }
 
   getBullets() {

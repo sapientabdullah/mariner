@@ -57,8 +57,7 @@ export class StaticObjectSystem {
 
   checkCollisions(
     boat: THREE.Object3D,
-    currentSpeed: number,
-    collisionSound: THREE.Audio
+    currentSpeed: number
   ): { hasCollision: boolean; resultSpeed: number } {
     if (!boat || !this.island || !this.lighthouse) {
       return { hasCollision: false, resultSpeed: currentSpeed };
@@ -76,9 +75,6 @@ export class StaticObjectSystem {
         .normalize();
       boat.position.add(bounceDirection.multiplyScalar(5));
 
-      if (collisionSound && !collisionSound.isPlaying) {
-        collisionSound.play();
-      }
       return {
         hasCollision: true,
         resultSpeed: -currentSpeed * this.COLLISION_BOUNCE_FACTOR,
@@ -93,9 +89,6 @@ export class StaticObjectSystem {
         .normalize();
       boat.position.add(bounceDirection.multiplyScalar(5));
 
-      if (collisionSound && !collisionSound.isPlaying) {
-        collisionSound.play();
-      }
       return {
         hasCollision: true,
         resultSpeed: -currentSpeed * this.COLLISION_BOUNCE_FACTOR,

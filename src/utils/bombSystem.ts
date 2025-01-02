@@ -7,7 +7,7 @@ export class BombSystem {
   private scene: THREE.Scene;
   private enemyBoatSystem: EnemyBoatSystem;
   private explosionTexture: THREE.Texture;
-  private explosionSound: THREE.Audio;
+  private explosionSound: THREE.Audio | null = null;
   private readonly BOMB_COOLDOWN = 5000; // 5s cooldown
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
@@ -25,13 +25,30 @@ export class BombSystem {
   constructor(
     scene: THREE.Scene,
     enemyBoatSystem: EnemyBoatSystem,
-    explosionSound: THREE.Audio
+    camera: THREE.Camera
   ) {
     this.scene = scene;
     this.enemyBoatSystem = enemyBoatSystem;
-    this.explosionSound = explosionSound;
     const textureLoader = new THREE.TextureLoader();
     this.explosionTexture = textureLoader.load("/textures/explosion.webp");
+    this.initializeSounds(camera);
+  }
+
+  private async initializeSounds(camera: THREE.Camera) {
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const audioLoader = new THREE.AudioLoader();
+
+    try {
+      const explosionSound = new THREE.Audio(listener);
+      const buffer = await audioLoader.loadAsync("/audio/explosion.mp3");
+      explosionSound.setBuffer(buffer);
+      explosionSound.setVolume(0.5);
+      this.explosionSound = explosionSound;
+    } catch (error) {
+      console.error("Error loading explosion sound:", error);
+    }
   }
 
   createBomb(turret: THREE.Object3D) {
@@ -99,7 +116,6 @@ export class BombSystem {
       requestAnimationFrame(animateExplosion);
     };
 
-    // Play sound before animation starts
     if (this.explosionSound && !this.explosionSound.isPlaying) {
       this.explosionSound.play();
     }
@@ -126,5 +142,10 @@ export class BombSystem {
   cleanup() {
     this.bombs.forEach((bomb) => this.scene.remove(bomb));
     this.bombs = [];
+
+    if (this.explosionSound) {
+      this.explosionSound.disconnect();
+      this.explosionSound = null;
+    }
   }
 }

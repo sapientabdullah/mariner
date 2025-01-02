@@ -9,18 +9,39 @@ export class WaterSpoutSystem {
   private SPOUT_LIFETIME = 3000; // 3 seconds per spout
   private SPOUT_RANGE = 500;
   private boatReference: THREE.Object3D;
-  private whaleSounds: THREE.Audio[];
+  private whaleSounds: THREE.Audio[] = [];
 
   constructor(
     scene: THREE.Scene,
-    boatReference: THREE.Object3D,
-    whaleSounds: THREE.Audio[]
+    camera: THREE.Camera,
+    boatReference: THREE.Object3D
   ) {
     this.scene = scene;
     this.boatReference = boatReference;
-    this.whaleSounds = whaleSounds;
     const textureLoader = new THREE.TextureLoader();
     this.spoutTexture = textureLoader.load("/textures/water-spout.webp");
+    this.initializeSounds(camera);
+  }
+
+  private async initializeSounds(camera: THREE.Camera) {
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const whaleFiles = ["/audio/whale-1.mp3", "/audio/whale-2.mp3"];
+
+    const audioLoader = new THREE.AudioLoader();
+
+    try {
+      for (const soundFile of whaleFiles) {
+        const whaleSound = new THREE.Audio(listener);
+        const buffer = await audioLoader.loadAsync(soundFile);
+        whaleSound.setBuffer(buffer);
+        whaleSound.setVolume(0.5);
+        this.whaleSounds.push(whaleSound);
+      }
+    } catch (error) {
+      console.error("Error loading whale sounds:", error);
+    }
   }
 
   private createSpout() {
@@ -90,5 +111,16 @@ export class WaterSpoutSystem {
 
       return true;
     });
+  }
+  public cleanup() {
+    this.spouts.forEach((spout) => {
+      this.scene.remove(spout);
+    });
+    this.spouts = [];
+
+    this.whaleSounds.forEach((sound) => {
+      sound.disconnect();
+    });
+    this.whaleSounds = [];
   }
 }

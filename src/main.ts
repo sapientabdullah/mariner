@@ -75,15 +75,9 @@ let mouseY = 0;
 const MOUSE_SENSITIVITY = 0.002; // Turning speed
 let turret: THREE.Object3D;
 let isMouseDown = false;
-const GUNSHOT_POOL_SIZE = 5;
 let engineSound: Audio;
 let engineIdleSound: Audio;
 let waterSplashSound: Audio;
-let collisionSound: Audio;
-let explosionSound: Audio;
-let whaleSounds: Audio[] = [];
-let gunSoundPool: Audio[] = [];
-let checkpointSound: Audio;
 let scoreSystem: ScoreSystem;
 scoreSystem = new ScoreSystem(scene);
 
@@ -136,20 +130,16 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
     isPaused = true;
     handleGameOver();
   });
-  enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat);
-  bombSystem = new BombSystem(scene, enemyBoatSystem, explosionSound);
+  enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat, camera);
+  bombSystem = new BombSystem(scene, enemyBoatSystem, camera);
   sharkSystem = new SharkSystem(scene, boat, scoreSystem);
-  waterSpoutSystem = new WaterSpoutSystem(scene, boat, whaleSounds);
-  checkpointSystem = new CheckpointSystem(scene, checkpointSound, () => {
+  waterSpoutSystem = new WaterSpoutSystem(scene, camera, boat);
+  checkpointSystem = new CheckpointSystem(scene, camera, () => {
     isPaused = true;
     handleGameOver();
   });
-  obstacleSystem = new ObstacleSystem(scene, collisionSound, scoreSystem);
-  bulletSystem = new BulletSystem(
-    scene,
-    oceanSystem.water.position.y,
-    gunSoundPool
-  );
+  obstacleSystem = new ObstacleSystem(scene, scoreSystem, camera);
+  bulletSystem = new BulletSystem(scene, oceanSystem.water.position.y, camera);
 });
 
 function createTurret() {
@@ -179,6 +169,7 @@ function setupBoatSounds() {
 
   engineSound = new Audio(audioListener);
   engineIdleSound = new Audio(audioListener);
+  waterSplashSound = new Audio(audioListener);
 
   const audioLoader = new AudioLoader();
   audioLoader.load("/audio/engine-move.mp3", function (buffer) {
@@ -195,53 +186,10 @@ function setupBoatSounds() {
     engineIdleSound.play();
   });
 
-  waterSplashSound = new Audio(audioListener);
   audioLoader.load("/sounds/water-splash.mp3", function (buffer) {
     waterSplashSound.setBuffer(buffer);
     waterSplashSound.setLoop(false);
     waterSplashSound.setVolume(0.4);
-  });
-
-  collisionSound = new Audio(audioListener);
-  audioLoader.load("/audio/collision.mp3", function (buffer) {
-    collisionSound.setBuffer(buffer);
-    collisionSound.setLoop(false);
-    collisionSound.setVolume(0.5);
-  });
-
-  audioLoader.load("/audio/bullet-fire.wav", function (buffer) {
-    for (let i = 0; i < GUNSHOT_POOL_SIZE; i++) {
-      const sound = new Audio(audioListener);
-      sound.setBuffer(buffer);
-      sound.setLoop(false);
-      sound.setVolume(0.3);
-      gunSoundPool.push(sound);
-    }
-  });
-
-  checkpointSound = new Audio(audioListener);
-  audioLoader.load("/audio/checkpoint.mp3", function (buffer) {
-    checkpointSound.setBuffer(buffer);
-    checkpointSound.setLoop(false);
-    checkpointSound.setVolume(0.5);
-  });
-
-  const whaleFiles = ["/audio/whale-1.mp3", "/audio/whale-2.mp3"];
-  whaleFiles.forEach((soundFile) => {
-    const whaleSound = new Audio(audioListener);
-    audioLoader.load(soundFile, function (buffer) {
-      whaleSound.setBuffer(buffer);
-      whaleSound.setLoop(false);
-      whaleSound.setVolume(0.5);
-    });
-    whaleSounds.push(whaleSound);
-  });
-
-  explosionSound = new Audio(audioListener);
-  audioLoader.load("/audio/explosion.mp3", function (buffer) {
-    explosionSound.setBuffer(buffer);
-    explosionSound.setLoop(false);
-    explosionSound.setVolume(0.8);
   });
 }
 
@@ -272,15 +220,7 @@ function updateBoatSounds(deltaTime: number) {
 }
 
 function cleanupAudio() {
-  const sounds = [
-    engineSound,
-    engineIdleSound,
-    waterSplashSound,
-    collisionSound,
-    explosionSound,
-    ...whaleSounds,
-    ...gunSoundPool,
-  ];
+  const sounds = [engineSound, engineIdleSound, waterSplashSound];
 
   sounds.forEach((sound) => {
     if (sound?.isPlaying) {
@@ -290,9 +230,6 @@ function cleanupAudio() {
       sound?.disconnect();
     } catch (e) {}
   });
-
-  whaleSounds = [];
-  gunSoundPool = [];
 }
 
 let lastTime = 0;
@@ -352,9 +289,6 @@ function updateGameState(deltaTime: number) {
     if (collisionOccurred) {
       currentSpeed = newSpeed;
       camera.position.y += Math.random() * 2 - 1;
-      if (collisionSound && !collisionSound.isPlaying) {
-        collisionSound.play();
-      }
     }
   }
 
@@ -388,8 +322,7 @@ function updateGameState(deltaTime: number) {
 
     const { hasCollision, resultSpeed } = staticObjectSystem.checkCollisions(
       boat,
-      currentSpeed,
-      collisionSound
+      currentSpeed
     );
     if (hasCollision) {
       currentSpeed = resultSpeed;
@@ -662,14 +595,7 @@ function handleQuit() {
 }
 
 function pauseAllAudio() {
-  const audioSources = [
-    engineSound,
-    engineIdleSound,
-    waterSplashSound,
-    collisionSound,
-    checkpointSound,
-    ...gunSoundPool,
-  ];
+  const audioSources = [engineSound, engineIdleSound, waterSplashSound];
   audioSources.forEach((sound) => {
     if (sound?.isPlaying) sound.pause();
   });

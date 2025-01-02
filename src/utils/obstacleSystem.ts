@@ -10,22 +10,39 @@ export class ObstacleSystem {
   private readonly MIN_HITS_TO_DESTROY = 3;
   private readonly MAX_HITS_TO_DESTROY = 7;
   private scene: THREE.Scene;
-  private collisionSound: THREE.Audio;
+  private collisionSound: THREE.Audio | null = null;
   private textureLoader: THREE.TextureLoader;
   private explosionTexture: THREE.Texture;
   private scoreSystem: ScoreSystem;
 
   constructor(
     scene: THREE.Scene,
-    collisionSound: THREE.Audio,
-    scoreSystem: ScoreSystem
+    scoreSystem: ScoreSystem,
+    camera: THREE.Camera
   ) {
     this.scene = scene;
-    this.collisionSound = collisionSound;
     this.scoreSystem = scoreSystem;
     this.textureLoader = new THREE.TextureLoader();
     this.explosionTexture = this.textureLoader.load("/textures/explosion.webp");
+    this.initializeSounds(camera);
     this.spawnObstacles();
+  }
+
+  private async initializeSounds(camera: THREE.Camera) {
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const audioLoader = new THREE.AudioLoader();
+
+    try {
+      const collisionSound = new THREE.Audio(listener);
+      const buffer = await audioLoader.loadAsync("/audio/collision.mp3");
+      collisionSound.setBuffer(buffer);
+      collisionSound.setVolume(0.5);
+      this.collisionSound = collisionSound;
+    } catch (error) {
+      console.error("Error loading collision sound:", error);
+    }
   }
 
   private createObstacle(): THREE.Group {
@@ -351,6 +368,15 @@ export class ObstacleSystem {
           obstacle.userData.originalY +
           Math.sin(obstacle.userData.floatPhase) * 0.5;
       }
+    }
+  }
+  public cleanup() {
+    this.obstacles.forEach((obstacle) => this.scene.remove(obstacle));
+    this.obstacles = [];
+
+    if (this.collisionSound) {
+      this.collisionSound.disconnect();
+      this.collisionSound = null;
     }
   }
 }

@@ -8,6 +8,7 @@ export class EnemyBoatSystem {
   private scene: THREE.Scene;
   private waterSplashSystem: WaterSplashSystem;
   private playerBoat: THREE.Object3D;
+  private collisionSound: THREE.Audio | null = null;
 
   private readonly ENEMY_SPEED = 20;
   private readonly ENEMY_ROTATION_SPEED = 0.02;
@@ -15,12 +16,31 @@ export class EnemyBoatSystem {
   constructor(
     scene: THREE.Scene,
     waterSplashSystem: WaterSplashSystem,
-    playerBoat: THREE.Object3D
+    playerBoat: THREE.Object3D,
+    camera: THREE.Camera
   ) {
     this.scene = scene;
     this.waterSplashSystem = waterSplashSystem;
     this.playerBoat = playerBoat;
+    this.initializeSounds(camera);
     this.createEnemyBoat();
+  }
+
+  private async initializeSounds(camera: THREE.Camera) {
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    const audioLoader = new THREE.AudioLoader();
+
+    try {
+      const collisionSound = new THREE.Audio(listener);
+      const buffer = await audioLoader.loadAsync("/audio/collision.mp3");
+      collisionSound.setBuffer(buffer);
+      collisionSound.setVolume(0.5);
+      this.collisionSound = collisionSound;
+    } catch (error) {
+      console.error("Error loading collision sound:", error);
+    }
   }
 
   private createEnemyBoat() {
@@ -101,6 +121,10 @@ export class EnemyBoatSystem {
 
       currentSpeed *= 0.5;
 
+      if (this.collisionSound && !this.collisionSound.isPlaying) {
+        this.collisionSound.play();
+      }
+
       const collisionPoint = new THREE.Vector3()
         .addVectors(this.playerBoat.position, this.enemyBoat.position)
         .multiplyScalar(0.5);
@@ -121,5 +145,11 @@ export class EnemyBoatSystem {
       Math.sin(time * bobbingSpeed * 0.7) * bobbingAmount * 0.5;
 
     return { collisionOccurred, currentSpeed };
+  }
+  public cleanup() {
+    if (this.collisionSound) {
+      this.collisionSound.disconnect();
+      this.collisionSound = null;
+    }
   }
 }

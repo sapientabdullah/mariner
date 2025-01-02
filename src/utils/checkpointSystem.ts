@@ -8,7 +8,7 @@ export class CheckpointSystem {
   private scene: THREE.Scene;
   private currentTextSprite: THREE.Sprite | null = null;
   private timeSprite: THREE.Sprite | null = null;
-  private checkpointSound: THREE.Audio;
+  private checkpointSound: THREE.Audio | null = null;
   private readonly CHECKPOINT_RADIUS = 50;
   private readonly CHECKPOINT_SPACING = 500;
   private readonly LINE_HEIGHT = 100;
@@ -16,16 +16,29 @@ export class CheckpointSystem {
   private timeRemaining: number;
   private onTimeUp: () => void;
 
-  constructor(
-    scene: THREE.Scene,
-    checkpointSound: THREE.Audio,
-    onTimeUp: () => void
-  ) {
+  constructor(scene: THREE.Scene, camera: THREE.Camera, onTimeUp: () => void) {
     this.scene = scene;
-    this.checkpointSound = checkpointSound;
     this.onTimeUp = onTimeUp;
     this.timeRemaining = this.TIME_PER_CHECKPOINT;
+    this.initializeSound(camera);
     this.initialize();
+  }
+
+  private async initializeSound(camera: THREE.Camera) {
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    this.checkpointSound = new THREE.Audio(listener);
+
+    const audioLoader = new THREE.AudioLoader();
+
+    try {
+      const buffer = await audioLoader.loadAsync("/audio/checkpoint.mp3");
+      this.checkpointSound.setBuffer(buffer);
+      this.checkpointSound.setVolume(0.5);
+    } catch (error) {
+      console.error("Error loading checkpoint sound:", error);
+    }
   }
 
   private initialize() {
@@ -213,18 +226,24 @@ export class CheckpointSystem {
 
     return distanceToCheckpoint;
   }
+
   public getRemainingTime(): number {
     return this.timeRemaining;
   }
+
   public getCurrentCheckpoint(): THREE.Vector3 | null {
     return this.checkpoints[this.currentCheckpointIndex] || null;
   }
+
   public cleanup() {
     if (this.timeSprite) {
       this.scene.remove(this.timeSprite);
     }
     if (this.currentCheckpointMesh) {
       this.scene.remove(this.currentCheckpointMesh);
+    }
+    if (this.checkpointSound) {
+      this.checkpointSound.disconnect();
     }
   }
 }
