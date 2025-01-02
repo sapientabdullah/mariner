@@ -82,6 +82,7 @@ let scoreSystem: ScoreSystem;
 scoreSystem = new ScoreSystem(scene);
 
 const reticleSystem = new ReticleSystem();
+reticleSystem.toggleVisibility(false);
 const speedometer = new SpeedometerSystem(MAX_SPEED);
 const minimapSystem = new MinimapSystem(scene);
 const oceanSystem = new OceanSystem(scene, audioListener);
@@ -112,6 +113,8 @@ export function startGame() {
   isPaused = false;
   animate(performance.now());
   setupEventListeners();
+
+  reticleSystem.toggleVisibility(true);
 }
 
 loader.load("/models/boat/scene.gltf", (gltf) => {
@@ -628,6 +631,8 @@ function handleGameResume() {
   previousAnimationFrame = requestAnimationFrame(animate);
   resumeMainAudio();
   togglePauseUI(false);
+
+  document.exitPointerLock();
 }
 
 function togglePause() {
@@ -738,6 +743,15 @@ function handleGameOver() {
   mouseY = 0;
 
   cleanup();
+
+  const gameOverOverlay = document.getElementById("game-over-overlay")!;
+  const finalScoreElement = document.getElementById("final-score")!;
+  const playerRankElement = document.getElementById("player-rank")!;
+
+  finalScoreElement.textContent = scoreSystem.getScore().toString();
+  playerRankElement.textContent = scoreSystem.getRank(scoreSystem.getScore());
+
+  gameOverOverlay.classList.remove("hidden");
 }
 
 function handleResize() {

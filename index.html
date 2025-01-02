@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seawolf</title>
+  <title>Mariner</title>
 </head>
 
 <body>
@@ -76,7 +76,7 @@
   <div id="loading-screen">
     <div class="loading-container">
       <div class="game-logo">
-        <img src="path-to-your-logo.png" alt="Game Logo">
+        <img src="/game-logo.png" alt="Game Logo">
       </div>
       <div class="loading-text">LOADING MISSION</div>
       <div class="progress-bar-container">
@@ -87,6 +87,15 @@
         <span class="tip-header">COMBAT TIP</span>
         <p class="tip-text">Always check your corners and maintain situational awareness.</p>
       </div>
+    </div>
+  </div>
+
+  <div id="game-over-overlay" class="hidden">
+    <div class="game-over-content">
+      <h1>Game Over</h1>
+      <p>Your final score: <span id="final-score"></span></p>
+      <p>Your rank: <span id="player-rank"></span></p>
+      <button id="restart-button">Restart</button>
     </div>
   </div>
 

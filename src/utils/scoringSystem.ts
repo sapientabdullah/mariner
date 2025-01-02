@@ -186,6 +186,22 @@ export class ScoreSystem {
     return this.score;
   }
 
+  public getRank(score: number): string {
+    if (score >= 10000) {
+      return "Admiral";
+    } else if (score >= 5000) {
+      return "Captain";
+    } else if (score >= 2000) {
+      return "Commander";
+    } else if (score >= 1000) {
+      return "Lieutenant";
+    } else if (score >= 500) {
+      return "Sergeant";
+    } else {
+      return "Seaman";
+    }
+  }
+
   public reset() {
     this.score = 0;
     this.multiplier = 1;
