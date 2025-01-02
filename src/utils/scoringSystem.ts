@@ -74,23 +74,23 @@ export class ScoreSystem {
 
     switch (type) {
       case "checkpoint":
-        text = `+${score} CHECKPOINT${multiplierText}`;
+        text = `+${score} ${multiplierText}`;
         color = "#00ff00";
         break;
       case "enemy":
-        text = `+${score} ENEMY DESTROYED${multiplierText}`;
+        text = `+${score} ${multiplierText}`;
         color = "#ff0000";
         break;
       case "shark":
-        text = `+${score} SHARK ELIMINATED${multiplierText}`;
+        text = `+${score} ${multiplierText}`;
         color = "#ff9900";
         break;
       case "timeBonus":
-        text = `+${score} TIME BONUS`;
+        text = `+${score}`;
         color = "#00ffff";
         break;
       default:
-        text = `+${score}${multiplierText}`;
+        text = `+${score} ${multiplierText}`;
     }
 
     const sprite = this.createScorePopup(text, position, color);

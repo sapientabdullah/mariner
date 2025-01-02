@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ScoreSystem } from "./scoringSystem";
 
 export class ObstacleSystem {
   private obstacles: THREE.Group[] = [];
@@ -12,10 +13,16 @@ export class ObstacleSystem {
   private collisionSound: THREE.Audio;
   private textureLoader: THREE.TextureLoader;
   private explosionTexture: THREE.Texture;
+  private scoreSystem: ScoreSystem;
 
-  constructor(scene: THREE.Scene, collisionSound: THREE.Audio) {
+  constructor(
+    scene: THREE.Scene,
+    collisionSound: THREE.Audio,
+    scoreSystem: ScoreSystem
+  ) {
     this.scene = scene;
     this.collisionSound = collisionSound;
+    this.scoreSystem = scoreSystem;
     this.textureLoader = new THREE.TextureLoader();
     this.explosionTexture = this.textureLoader.load("/textures/explosion.webp");
     this.spawnObstacles();
@@ -192,8 +199,8 @@ export class ObstacleSystem {
   }
 
   private destroyObstacle(obstacle: THREE.Group, index: number) {
+    this.scoreSystem.addEnemyKillScore(obstacle.position);
     this.createExplosionEffect(obstacle.position);
-
     this.scene.remove(obstacle);
     this.obstacles.splice(index, 1);
   }

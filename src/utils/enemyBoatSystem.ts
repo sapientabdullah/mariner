@@ -25,7 +25,7 @@ export class EnemyBoatSystem {
 
   private createEnemyBoat() {
     const enemyLoader = new GLTFLoader(loadingManager);
-    enemyLoader.load("/Tow Boat/scene.gltf", (gltf) => {
+    enemyLoader.load("/models/boat/scene.gltf", (gltf) => {
       this.enemyBoat = gltf.scene;
       this.enemyBoat.scale.set(10, 10, 10);
       this.enemyBoat.position.set(100, 5, 100);

@@ -1,11 +1,13 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { loadingManager } from "./managers/loadingManager";
+import { ScoreSystem } from "./scoringSystem";
 
 export class SharkSystem {
   private sharks: THREE.Object3D[] = [];
   private scene: THREE.Scene;
   private targetBoat: THREE.Object3D;
+  private scoreSystem: ScoreSystem;
   private sharkSpeed = 50;
   private attackRange = 100;
   private damageRange = 10;
@@ -13,9 +15,14 @@ export class SharkSystem {
   private lastSpawnTime = 0;
   private maxSharks = 3;
 
-  constructor(scene: THREE.Scene, targetBoat: THREE.Object3D) {
+  constructor(
+    scene: THREE.Scene,
+    targetBoat: THREE.Object3D,
+    scoreSystem: ScoreSystem
+  ) {
     this.scene = scene;
     this.targetBoat = targetBoat;
+    this.scoreSystem = scoreSystem;
     this.spawnShark();
   }
 
@@ -77,6 +84,7 @@ export class SharkSystem {
           bullets.splice(bulletIndex, 1);
 
           if (shark.userData.health <= 0) {
+            this.scoreSystem.addSharkKillScore(shark.position.clone());
             this.scene.remove(shark);
             this.sharks.splice(index, 1);
           }

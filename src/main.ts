@@ -50,7 +50,8 @@ controls.update();
 const audioListener = new THREE.AudioListener();
 camera.add(audioListener);
 
-let animationFrameId: number;
+let previousAnimationFrame: number | null = null;
+let isAnimating = false;
 
 const loader = new GLTFLoader(loadingManager);
 export let boat: THREE.Object3D;
@@ -106,9 +107,14 @@ let bulletSystem: BulletSystem;
 const keysPressed: { [key: string]: boolean } = {};
 
 export function startGame() {
+  if (previousAnimationFrame !== null) {
+    cancelAnimationFrame(previousAnimationFrame);
+    previousAnimationFrame = null;
+  }
+
   setupBoatSounds();
   lastTime = performance.now();
-  cancelAnimationFrame(animationFrameId);
+  isAnimating = true;
   isPaused = false;
   animate(performance.now());
   setupEventListeners();
@@ -132,13 +138,13 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
   });
   enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat);
   bombSystem = new BombSystem(scene, enemyBoatSystem, explosionSound);
-  sharkSystem = new SharkSystem(scene, boat);
+  sharkSystem = new SharkSystem(scene, boat, scoreSystem);
   waterSpoutSystem = new WaterSpoutSystem(scene, boat, whaleSounds);
   checkpointSystem = new CheckpointSystem(scene, checkpointSound, () => {
     isPaused = true;
     handleGameOver();
   });
-  obstacleSystem = new ObstacleSystem(scene, collisionSound);
+  obstacleSystem = new ObstacleSystem(scene, collisionSound, scoreSystem);
   bulletSystem = new BulletSystem(
     scene,
     oceanSystem.water.position.y,
@@ -169,19 +175,20 @@ function createTurret() {
 }
 
 function setupBoatSounds() {
-  engineSound = new Audio(audioListener);
+  cleanupAudio();
 
-  const engineLoader = new AudioLoader();
-  engineLoader.load("/audio/engine-move.mp3", function (buffer) {
+  engineSound = new Audio(audioListener);
+  engineIdleSound = new Audio(audioListener);
+
+  const audioLoader = new AudioLoader();
+  audioLoader.load("/audio/engine-move.mp3", function (buffer) {
     engineSound.setBuffer(buffer);
     engineSound.setLoop(true);
     engineSound.setVolume(0);
     engineSound.play();
   });
 
-  engineIdleSound = new Audio(audioListener);
-  const idleLoader = new AudioLoader();
-  idleLoader.load("/audio/engine-idle.mp3", function (buffer) {
+  audioLoader.load("/audio/engine-idle.mp3", function (buffer) {
     engineIdleSound.setBuffer(buffer);
     engineIdleSound.setLoop(true);
     engineIdleSound.setVolume(0.3);
@@ -189,23 +196,20 @@ function setupBoatSounds() {
   });
 
   waterSplashSound = new Audio(audioListener);
-  const splashLoader = new AudioLoader();
-  splashLoader.load("/sounds/water-splash.mp3", function (buffer) {
+  audioLoader.load("/sounds/water-splash.mp3", function (buffer) {
     waterSplashSound.setBuffer(buffer);
     waterSplashSound.setLoop(false);
     waterSplashSound.setVolume(0.4);
   });
 
   collisionSound = new Audio(audioListener);
-  const collisionLoader = new AudioLoader();
-  collisionLoader.load("/audio/collision.mp3", function (buffer) {
+  audioLoader.load("/audio/collision.mp3", function (buffer) {
     collisionSound.setBuffer(buffer);
     collisionSound.setLoop(false);
     collisionSound.setVolume(0.5);
   });
 
-  const gunLoader = new AudioLoader();
-  gunLoader.load("/audio/bullet-fire.wav", function (buffer) {
+  audioLoader.load("/audio/bullet-fire.wav", function (buffer) {
     for (let i = 0; i < GUNSHOT_POOL_SIZE; i++) {
       const sound = new Audio(audioListener);
       sound.setBuffer(buffer);
@@ -216,19 +220,16 @@ function setupBoatSounds() {
   });
 
   checkpointSound = new Audio(audioListener);
-  const checkpointLoader = new AudioLoader();
-  checkpointLoader.load("/audio/checkpoint.mp3", function (buffer) {
+  audioLoader.load("/audio/checkpoint.mp3", function (buffer) {
     checkpointSound.setBuffer(buffer);
     checkpointSound.setLoop(false);
     checkpointSound.setVolume(0.5);
   });
 
   const whaleFiles = ["/audio/whale-1.mp3", "/audio/whale-2.mp3"];
-
   whaleFiles.forEach((soundFile) => {
     const whaleSound = new Audio(audioListener);
-    const whaleLoader = new AudioLoader();
-    whaleLoader.load(soundFile, function (buffer) {
+    audioLoader.load(soundFile, function (buffer) {
       whaleSound.setBuffer(buffer);
       whaleSound.setLoop(false);
       whaleSound.setVolume(0.5);
@@ -237,8 +238,7 @@ function setupBoatSounds() {
   });
 
   explosionSound = new Audio(audioListener);
-  const explosionLoader = new AudioLoader();
-  explosionLoader.load("/audio/explosion.mp3", function (buffer) {
+  audioLoader.load("/audio/explosion.mp3", function (buffer) {
     explosionSound.setBuffer(buffer);
     explosionSound.setLoop(false);
     explosionSound.setVolume(0.8);
@@ -271,27 +271,55 @@ function updateBoatSounds(deltaTime: number) {
   }
 }
 
+function cleanupAudio() {
+  const sounds = [
+    engineSound,
+    engineIdleSound,
+    waterSplashSound,
+    collisionSound,
+    explosionSound,
+    ...whaleSounds,
+    ...gunSoundPool,
+  ];
+
+  sounds.forEach((sound) => {
+    if (sound?.isPlaying) {
+      sound.stop();
+    }
+    try {
+      sound?.disconnect();
+    } catch (e) {}
+  });
+
+  whaleSounds = [];
+  gunSoundPool = [];
+}
+
 let lastTime = 0;
 const MAX_DELTA_TIME = 0.1;
 
 function animate(time: number) {
-  if (isPaused) {
-    cancelAnimationFrame(animationFrameId);
+  if (!isAnimating || isPaused) {
+    previousAnimationFrame = null;
     return;
   }
 
-  if (time - lastTime > 1000) {
-    lastTime = time - 1000 / 60;
-  }
-
-  let deltaTime = (time - lastTime) / 1000;
+  const maxFrameTime = 1000 / 30;
+  let deltaTime = Math.min(time - lastTime, maxFrameTime) / 1000;
   deltaTime = Math.min(deltaTime, MAX_DELTA_TIME);
 
+  lastTime = time;
+
+  updateGameState(deltaTime);
+
+  renderer.render(scene, camera);
+  previousAnimationFrame = requestAnimationFrame(animate);
+}
+
+function updateGameState(deltaTime: number) {
   if (scoreSystem) {
     scoreSystem.update(deltaTime);
   }
-
-  lastTime = time;
 
   if (bulletSystem) {
     bulletSystem.update(deltaTime, obstacleSystem);
@@ -523,8 +551,6 @@ function animate(time: number) {
 
   oceanSystem.update();
   skySystem.update(camera);
-  renderer.render(scene, camera);
-  animationFrameId = requestAnimationFrame(animate);
 }
 
 function togglePauseUI(isPaused: boolean) {
@@ -543,26 +569,35 @@ function togglePauseUI(isPaused: boolean) {
   }
 }
 
+const pauseMenuHandlers = {
+  controls: () => {
+    const controlsPanel = document.getElementById("controls-panel");
+    controlsPanel?.classList.remove("hidden");
+  },
+  controlsBack: () => {
+    const controlsPanel = document.getElementById("controls-panel");
+    controlsPanel?.classList.add("hidden");
+  },
+};
+
 function setupPauseMenuListeners() {
   const resumeButton = document.getElementById("resume-button");
   const controlsButton = document.getElementById("controls-button");
   const controlsBackButton = document.getElementById("controls-back");
   const restartButton = document.getElementById("restart-button");
   const quitButton = document.getElementById("quit-button");
-  const controlsPanel = document.getElementById("controls-panel");
 
   if (resumeButton) {
     resumeButton.addEventListener("click", handleResume);
   }
   if (controlsButton) {
-    controlsButton.addEventListener("click", () => {
-      controlsPanel?.classList.remove("hidden");
-    });
+    controlsButton.addEventListener("click", pauseMenuHandlers.controls);
   }
   if (controlsBackButton) {
-    controlsBackButton.addEventListener("click", () => {
-      controlsPanel?.classList.add("hidden");
-    });
+    controlsBackButton.addEventListener(
+      "click",
+      pauseMenuHandlers.controlsBack
+    );
   }
   if (restartButton) {
     restartButton.addEventListener("click", handleRestart);
@@ -583,10 +618,13 @@ function removePauseMenuListeners() {
     resumeButton.removeEventListener("click", handleResume);
   }
   if (controlsButton) {
-    controlsButton.removeEventListener("click", () => {});
+    controlsButton.removeEventListener("click", pauseMenuHandlers.controls);
   }
   if (controlsBackButton) {
-    controlsBackButton.removeEventListener("click", () => {});
+    controlsBackButton.removeEventListener(
+      "click",
+      pauseMenuHandlers.controlsBack
+    );
   }
   if (restartButton) {
     restartButton.removeEventListener("click", handleRestart);
@@ -643,21 +681,25 @@ function resumeMainAudio() {
 }
 
 function handleGamePause() {
-  cancelAnimationFrame(animationFrameId);
+  isAnimating = false;
+  isPaused = true;
+
+  if (previousAnimationFrame !== null) {
+    cancelAnimationFrame(previousAnimationFrame);
+    previousAnimationFrame = null;
+  }
+
   pauseAllAudio();
   togglePauseUI(true);
-  bulletSystem.cleanup();
-
-  if (bombSystem) {
-    bombSystem.cleanup();
-  }
 }
 
 function handleGameResume() {
-  cancelAnimationFrame(animationFrameId);
-  lastTime = performance.now();
+  if (!isPaused) return;
+
+  isAnimating = true;
   isPaused = false;
-  animate(performance.now());
+  lastTime = performance.now();
+  previousAnimationFrame = requestAnimationFrame(animate);
   resumeMainAudio();
   togglePauseUI(false);
 }
@@ -679,11 +721,6 @@ function togglePause() {
 }
 
 function setupEventListeners() {
-  window.addEventListener("resize", () => {
-    handleResize();
-    reticleSystem.handleResize();
-  });
-
   window.addEventListener("keydown", (event) => {
     keysPressed[event.key] = true;
     if (event.key.toLowerCase() === "p") {
@@ -731,15 +768,9 @@ function setupEventListeners() {
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      isPaused = true;
       handleGamePause();
-    } else {
-      if (!userPaused) {
-        isPaused = false;
-        handleGameResume();
-      } else {
-        togglePauseUI(true);
-      }
+    } else if (!userPaused) {
+      handleGameResume();
     }
   });
 
@@ -768,6 +799,19 @@ function handleGameOver() {
   if (healthSystem) {
     healthSystem.reset();
   }
+
+  cleanupAudio();
+
+  bulletSystem?.cleanup();
+  bombSystem?.cleanup();
+
+  currentSpeed = 0;
+  targetTilt = 0;
+  currentTilt = 0;
+  mouseX = 0;
+  mouseY = 0;
+
+  cleanup();
 }
 
 function handleResize() {
@@ -775,3 +819,17 @@ function handleResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+function cleanup() {
+  isAnimating = false;
+  if (previousAnimationFrame !== null) {
+    cancelAnimationFrame(previousAnimationFrame);
+    previousAnimationFrame = null;
+  }
+  cleanupAudio();
+}
+
+window.addEventListener("resize", () => {
+  handleResize();
+  reticleSystem.handleResize();
+});
