@@ -51,12 +51,12 @@ const audioListener = new THREE.AudioListener();
 camera.add(audioListener);
 
 let previousAnimationFrame: number | null = null;
+let isPaused = false;
+let userPaused = false;
 let isAnimating = false;
 
 const loader = new GLTFLoader(loadingManager);
 export let boat: THREE.Object3D;
-let isPaused = false;
-let userPaused = false;
 let targetTilt = 0;
 let currentTilt = 0;
 const MAX_TILT = 0.3;
@@ -491,15 +491,18 @@ function updateGameState(deltaTime: number) {
 
 function togglePauseUI(isPaused: boolean) {
   const pauseOverlay = document.getElementById("pause-overlay");
+  const gameCanvas = renderer.domElement;
 
   if (pauseOverlay) {
     if (isPaused) {
       pauseOverlay.classList.remove("hidden");
       reticleSystem.toggleVisibility(false);
+      gameCanvas.style.cursor = "auto";
       setupPauseMenuListeners();
     } else {
       pauseOverlay.classList.add("hidden");
       reticleSystem.toggleVisibility(true);
+      gameCanvas.style.cursor = "none";
       removePauseMenuListeners();
     }
   }
@@ -571,24 +574,24 @@ function removePauseMenuListeners() {
 }
 
 function handleResume() {
-  togglePause();
+  if (isPaused) {
+    userPaused = false;
+    isPaused = false;
+    isAnimating = true;
+    lastTime = performance.now();
+    previousAnimationFrame = requestAnimationFrame(animate);
+    resumeMainAudio();
+    togglePauseUI(false);
+
+    setTimeout(() => {
+      renderer.domElement.requestPointerLock();
+      reticleSystem.centerReticle();
+    }, 100);
+  }
 }
 
 function handleRestart() {
-  if (healthSystem) {
-    healthSystem.reset();
-  }
-
-  if (boat) {
-    boat.position.set(0, 5, 0);
-    boat.rotation.set(0, Math.PI, 0);
-  }
-
-  currentSpeed = 0;
-  targetTilt = 0;
-  currentTilt = 0;
-
-  togglePause();
+  window.location.reload();
 }
 
 function handleQuit() {
@@ -744,6 +747,8 @@ function handleGameOver() {
 
   cleanup();
 
+  reticleSystem.toggleVisibility(false);
+  document.exitPointerLock();
   const gameOverOverlay = document.getElementById("game-over-overlay")!;
   const finalScoreElement = document.getElementById("final-score")!;
   const playerRankElement = document.getElementById("player-rank")!;
@@ -767,6 +772,8 @@ function cleanup() {
     previousAnimationFrame = null;
   }
   cleanupAudio();
+  removePauseMenuListeners();
+  renderer.domElement.style.cursor = "auto";
 }
 
 window.addEventListener("resize", () => {

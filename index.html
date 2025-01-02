@@ -91,11 +91,14 @@
   </div>
 
   <div id="game-over-overlay" class="hidden">
+    <div class="scanlines"></div>
     <div class="game-over-content">
-      <h1>Game Over</h1>
-      <p>Your final score: <span id="final-score"></span></p>
-      <p>Your rank: <span id="player-rank"></span></p>
-      <button id="restart-button">Restart</button>
+      <div class="glitch-container">
+        <h1>Mission Failed</h1>
+      </div>
+      <p>Final Score: <span id="final-score"></span></p>
+      <p>Rank: <span id="player-rank"></span></p>
+      <button id="restart-button" class="restart-button">Deploy Again</button>
     </div>
   </div>
 
