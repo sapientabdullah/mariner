@@ -71,6 +71,88 @@ export class EnemyBoatSystem {
     }
   }
 
+  public checkBulletCollisions(bullets: THREE.Mesh[]): THREE.Mesh[] {
+    if (!this.enemyBoat || this.isDestroyed) {
+      return bullets;
+    }
+
+    const remainingBullets: THREE.Mesh[] = [];
+    const hitDistance = 15;
+
+    for (const bullet of bullets) {
+      const distance = bullet.position.distanceTo(this.enemyBoat.position);
+
+      if (distance < hitDistance) {
+        const bulletDamage = 2;
+        this.takeDamage(bulletDamage);
+
+        this.createBulletHitEffect(bullet.position);
+
+        this.scene.remove(bullet);
+      } else {
+        remainingBullets.push(bullet);
+      }
+    }
+
+    return remainingBullets;
+  }
+
+  private createBulletHitEffect(position: THREE.Vector3) {
+    const particleGeometry = new THREE.BufferGeometry();
+    const particleCount = 10;
+    const positions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 2;
+      positions[i] = position.x + Math.cos(angle) * radius;
+      positions[i + 1] = position.y + Math.random() * 2;
+      positions[i + 2] = position.z + Math.sin(angle) * radius;
+    }
+
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(positions, 3)
+    );
+
+    const particleMaterial = new THREE.PointsMaterial({
+      color: 0xff6600,
+      size: 0.5,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+    this.scene.add(particleSystem);
+
+    const startTime = performance.now();
+    const duration = 500;
+
+    const animate = () => {
+      const elapsed = performance.now() - startTime;
+      if (elapsed > duration) {
+        this.scene.remove(particleSystem);
+        return;
+      }
+
+      const progress = elapsed / duration;
+      const positions = particleSystem.geometry.attributes.position
+        .array as Float32Array;
+
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i + 1] += 0.1;
+      }
+
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+      particleMaterial.opacity = 1 - progress;
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  }
+
   private createEnemyBoat() {
     const enemyLoader = new GLTFLoader(loadingManager);
     enemyLoader.load("/models/boat/scene.gltf", (gltf) => {
@@ -100,7 +182,7 @@ export class EnemyBoatSystem {
 
     const distance = this.enemyBoat.position.distanceTo(explosionPosition);
     if (distance <= explosionRadius) {
-      const damage = Math.ceil(50 * (1 - distance / explosionRadius)); // More damage when closer
+      const damage = Math.ceil(50 * (1 - distance / explosionRadius));
       this.takeDamage(damage);
     }
   }
@@ -109,6 +191,21 @@ export class EnemyBoatSystem {
     if (this.isDestroyed) return;
 
     this.currentHealth = Math.max(0, this.currentHealth - amount);
+
+    if (this.enemyBoat) {
+      this.enemyBoat.traverse((node) => {
+        if ((node as THREE.Mesh).isMesh) {
+          const material = (node as THREE.Mesh)
+            .material as THREE.MeshStandardMaterial;
+          if (material) {
+            material.emissive.setRGB(1, 0, 0);
+            setTimeout(() => {
+              material.emissive.setRGB(0, 0, 0);
+            }, 100);
+          }
+        }
+      });
+    }
 
     if (this.currentHealth <= this.DAMAGE_THRESHOLD) {
       this.showDamageEffects();

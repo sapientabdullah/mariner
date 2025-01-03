@@ -148,7 +148,7 @@ export class BulletSystem {
     }
   }
 
-  update(deltaTime: number, obstacleSystem: any) {
+  update(deltaTime: number, obstacleSystem: any, enemyBoatSystem: any) {
     const currentTime = performance.now();
 
     this.bullets = this.bullets.filter((bullet) => {
@@ -177,6 +177,9 @@ export class BulletSystem {
 
     if (obstacleSystem) {
       this.bullets = obstacleSystem.checkBulletCollisions(this.bullets);
+    }
+    if (enemyBoatSystem) {
+      this.bullets = enemyBoatSystem.checkBulletCollisions(this.bullets);
     }
   }
 

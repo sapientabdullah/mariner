@@ -262,7 +262,7 @@ function updateGameState(deltaTime: number) {
   }
 
   if (bulletSystem) {
-    bulletSystem.update(deltaTime, obstacleSystem);
+    bulletSystem.update(deltaTime, obstacleSystem, enemyBoatSystem);
   }
 
   if (bombSystem) {
