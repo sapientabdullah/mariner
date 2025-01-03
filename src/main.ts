@@ -5,7 +5,7 @@ import { Audio, AudioLoader } from "three";
 import { SeagullSystem } from "./utils/seagullSystem";
 import { WaterSplashSystem } from "./utils/splashSystem";
 import { SkySystem } from "./utils/skySystem";
-import { updateCompass } from "./utils/compassSystem";
+import { updateCompass } from "./utils/ui/compassSystem";
 import { SpeedometerSystem } from "./utils/ui/speedometerSystem";
 import { OceanSystem } from "./utils/oceanSystem";
 import { MinimapSystem } from "./utils/ui/minimapSystem";

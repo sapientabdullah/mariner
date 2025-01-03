@@ -11,7 +11,7 @@ export class BombSystem {
   private explosionTexture: THREE.Texture;
   private explosionSound: THREE.Audio | null = null;
   private firingSound: THREE.Audio | null = null;
-  private readonly BOMB_COOLDOWN = 5000; // 5s cooldown
+  private readonly BOMB_COOLDOWN = 5000;
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
   private readonly EXPLOSION_RADIUS = 200;
@@ -86,6 +86,10 @@ export class BombSystem {
         this.obstacleSystem.updateObstacleAppearance(obstacle);
       }
     });
+
+    if (this.enemyBoatSystem) {
+      this.enemyBoatSystem.handleExplosion(position, this.EXPLOSION_RADIUS);
+    }
   }
 
   createBomb(turret: THREE.Object3D) {
@@ -135,10 +139,6 @@ export class BombSystem {
     this.scene.add(explosion);
 
     this.handleExplosionDamage(position);
-
-    // if (this.enemyBoatSystem) {
-    //   this.enemyBoatSystem.handleExplosion(position, this.EXPLOSION_RADIUS);
-    // }
 
     const startTime = performance.now();
     const duration = 1000;

@@ -1,5 +1,5 @@
-import { boat } from "../main";
-import { CheckpointSystem } from "./checkpointSystem";
+import { boat } from "../../main";
+import { CheckpointSystem } from "../checkpointSystem";
 
 const DIRECTION_MAPPINGS = [
   { angle: 0, direction: "N" },

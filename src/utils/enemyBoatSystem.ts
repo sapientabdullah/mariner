@@ -9,9 +9,19 @@ export class EnemyBoatSystem {
   private waterSplashSystem: WaterSplashSystem;
   private playerBoat: THREE.Object3D;
   private collisionSound: THREE.Audio | null = null;
+  private explosionSound: THREE.Audio | null = null;
+  private fireTexture: THREE.Texture | null = null;
+  private camera: THREE.Camera;
+
+  private maxHealth = 100;
+  private currentHealth = 100;
+  private isDestroyed = false;
+  private fireParticles: THREE.Points[] = [];
+  private smokeParticles: THREE.Points[] = [];
 
   private readonly ENEMY_SPEED = 20;
   private readonly ENEMY_ROTATION_SPEED = 0.02;
+  private readonly DAMAGE_THRESHOLD = 30;
 
   constructor(
     scene: THREE.Scene,
@@ -20,26 +30,44 @@ export class EnemyBoatSystem {
     camera: THREE.Camera
   ) {
     this.scene = scene;
+    this.camera = camera;
     this.waterSplashSystem = waterSplashSystem;
     this.playerBoat = playerBoat;
     this.initializeSounds(camera);
+    this.loadFireTexture();
     this.createEnemyBoat();
+  }
+
+  private loadFireTexture() {
+    const textureLoader = new THREE.TextureLoader(loadingManager);
+    textureLoader.load("/textures/fire.png", (texture) => {
+      this.fireTexture = texture;
+    });
   }
 
   private async initializeSounds(camera: THREE.Camera) {
     const listener = new THREE.AudioListener();
     camera.add(listener);
-
     const audioLoader = new THREE.AudioLoader();
 
     try {
       const collisionSound = new THREE.Audio(listener);
-      const buffer = await audioLoader.loadAsync("/audio/collision.mp3");
-      collisionSound.setBuffer(buffer);
+      const explosionSound = new THREE.Audio(listener);
+
+      const [collisionBuffer, explosionBuffer] = await Promise.all([
+        audioLoader.loadAsync("/audio/collision.mp3"),
+        audioLoader.loadAsync("/audio/explosion.mp3"),
+      ]);
+
+      collisionSound.setBuffer(collisionBuffer);
       collisionSound.setVolume(0.5);
       this.collisionSound = collisionSound;
+
+      explosionSound.setBuffer(explosionBuffer);
+      explosionSound.setVolume(0.7);
+      this.explosionSound = explosionSound;
     } catch (error) {
-      console.error("Error loading collision sound:", error);
+      console.error("Error loading sounds:", error);
     }
   }
 
@@ -64,12 +92,184 @@ export class EnemyBoatSystem {
     });
   }
 
+  public handleExplosion(
+    explosionPosition: THREE.Vector3,
+    explosionRadius: number
+  ) {
+    if (!this.enemyBoat || this.isDestroyed) return;
+
+    const distance = this.enemyBoat.position.distanceTo(explosionPosition);
+    if (distance <= explosionRadius) {
+      const damage = Math.ceil(50 * (1 - distance / explosionRadius)); // More damage when closer
+      this.takeDamage(damage);
+    }
+  }
+
+  private takeDamage(amount: number) {
+    if (this.isDestroyed) return;
+
+    this.currentHealth = Math.max(0, this.currentHealth - amount);
+
+    if (this.currentHealth <= this.DAMAGE_THRESHOLD) {
+      this.showDamageEffects();
+    }
+
+    if (this.currentHealth <= 0) {
+      this.destroyBoat();
+    }
+  }
+
+  private showDamageEffects() {
+    if (!this.enemyBoat) return;
+
+    const smokeGeometry = new THREE.BufferGeometry();
+    const smokeParticles = new Float32Array(300 * 3);
+    for (let i = 0; i < 300 * 3; i += 3) {
+      smokeParticles[i] = (Math.random() - 0.5) * 10;
+      smokeParticles[i + 1] = Math.random() * 5;
+      smokeParticles[i + 2] = (Math.random() - 0.5) * 10;
+    }
+    smokeGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(smokeParticles, 3)
+    );
+
+    const smokeMaterial = new THREE.PointsMaterial({
+      size: 2,
+      color: 0x666666,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+    });
+
+    const smokeSystem = new THREE.Points(smokeGeometry, smokeMaterial);
+    smokeSystem.position.copy(this.enemyBoat.position);
+    this.scene.add(smokeSystem);
+    this.smokeParticles.push(smokeSystem);
+  }
+
+  private destroyBoat() {
+    if (!this.enemyBoat || this.isDestroyed) return;
+
+    this.isDestroyed = true;
+
+    if (this.explosionSound && !this.explosionSound.isPlaying) {
+      this.explosionSound.play();
+    }
+
+    const fireGeometry = new THREE.BufferGeometry();
+    const fireParticles = new Float32Array(500 * 3);
+    const fireUVs = new Float32Array(500 * 2);
+
+    for (let i = 0; i < 500; i++) {
+      const i3 = i * 3;
+      const i2 = i * 2;
+
+      fireParticles[i3] = (Math.random() - 0.5) * 15;
+      fireParticles[i3 + 1] = Math.random() * 10;
+      fireParticles[i3 + 2] = (Math.random() - 0.5) * 15;
+
+      fireUVs[i2] = Math.random();
+      fireUVs[i2 + 1] = Math.random();
+    }
+
+    fireGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(fireParticles, 3)
+    );
+    fireGeometry.setAttribute("uv", new THREE.BufferAttribute(fireUVs, 2));
+
+    const fireMaterial = new THREE.PointsMaterial({
+      size: 5,
+      map: this.fireTexture,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      vertexColors: false,
+    });
+
+    fireMaterial.alphaTest = 0.5;
+    fireMaterial.sizeAttenuation = true;
+
+    const fireSystem = new THREE.Points(fireGeometry, fireMaterial);
+    fireSystem.position.copy(this.enemyBoat.position);
+    this.scene.add(fireSystem);
+    this.fireParticles.push(fireSystem);
+
+    const sinkDuration = 5000;
+    const startPosition = this.enemyBoat.position.clone();
+    const startTime = performance.now();
+
+    const animateSinking = () => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(elapsed / sinkDuration, 1);
+
+      if (this.enemyBoat) {
+        this.enemyBoat.position.y = startPosition.y - progress * 10;
+        this.enemyBoat.rotation.z = progress * (Math.PI / 4);
+
+        this.fireParticles.forEach((fire) => {
+          fire.position.copy(this.enemyBoat!.position);
+          fire.position.y += 2;
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSinking);
+        } else {
+          this.scene.remove(this.enemyBoat);
+          setTimeout(() => this.cleanup(), 2000);
+        }
+      }
+    };
+
+    animateSinking();
+  }
+
   public update(deltaTime: number): {
     collisionOccurred: boolean;
     currentSpeed: number;
   } {
-    if (!this.enemyBoat || !this.playerBoat)
+    if (!this.enemyBoat || this.isDestroyed) {
       return { collisionOccurred: false, currentSpeed: 0 };
+    }
+
+    this.fireParticles.forEach((particles) => {
+      const positions = particles.geometry.attributes.position
+        .array as Float32Array;
+      const uvs = particles.geometry.attributes.uv.array as Float32Array;
+
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i + 1] += deltaTime * 10;
+        if (positions[i + 1] > 20) {
+          positions[i + 1] = 0;
+          positions[i] = (Math.random() - 0.5) * 15;
+          positions[i + 2] = (Math.random() - 0.5) * 15;
+        }
+
+        const uvIndex = (i / 3) * 2;
+        uvs[uvIndex] = (uvs[uvIndex] + deltaTime) % 1;
+      }
+
+      particles.geometry.attributes.position.needsUpdate = true;
+      particles.geometry.attributes.uv.needsUpdate = true;
+
+      particles.quaternion.copy(
+        this.camera.quaternion || new THREE.Quaternion()
+      );
+    });
+
+    this.smokeParticles.forEach((particles) => {
+      const positions = particles.geometry.attributes.position
+        .array as Float32Array;
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i + 1] += deltaTime * 5;
+        if (positions[i + 1] > 30) {
+          positions[i + 1] = 0;
+        }
+      }
+      particles.geometry.attributes.position.needsUpdate = true;
+    });
 
     const directionToPlayer = new THREE.Vector3()
       .subVectors(this.playerBoat.position, this.enemyBoat.position)
@@ -91,11 +291,13 @@ export class EnemyBoatSystem {
     let currentSpeed = 0;
     let collisionOccurred = false;
 
+    const speedMultiplier = this.currentHealth / this.maxHealth;
+
     if (distanceToPlayer > minDistance) {
       this.enemyBoat.position.x +=
-        directionToPlayer.x * this.ENEMY_SPEED * deltaTime;
+        directionToPlayer.x * this.ENEMY_SPEED * deltaTime * speedMultiplier;
       this.enemyBoat.position.z +=
-        directionToPlayer.z * this.ENEMY_SPEED * deltaTime;
+        directionToPlayer.z * this.ENEMY_SPEED * deltaTime * speedMultiplier;
 
       const enemyBoatDirection = new THREE.Vector3(
         Math.sin(this.enemyBoat.rotation.y),
@@ -135,21 +337,32 @@ export class EnemyBoatSystem {
       );
     }
 
-    const time = performance.now() * 0.001;
-    const bobbingSpeed = 1.5;
-    const bobbingAmount = 0.015;
-    this.enemyBoat.position.y = 5 + Math.sin(time * bobbingSpeed) * 0.5;
-    this.enemyBoat.rotation.z =
-      Math.sin(time * bobbingSpeed * 0.5) * bobbingAmount;
-    this.enemyBoat.rotation.x =
-      Math.sin(time * bobbingSpeed * 0.7) * bobbingAmount * 0.5;
+    if (!this.isDestroyed) {
+      const time = performance.now() * 0.001;
+      const bobbingSpeed = 1.5;
+      const bobbingAmount = 0.015;
+      this.enemyBoat.position.y = 5 + Math.sin(time * bobbingSpeed) * 0.5;
+      this.enemyBoat.rotation.z =
+        Math.sin(time * bobbingSpeed * 0.5) * bobbingAmount;
+      this.enemyBoat.rotation.x =
+        Math.sin(time * bobbingSpeed * 0.7) * bobbingAmount * 0.5;
+    }
 
     return { collisionOccurred, currentSpeed };
   }
   public cleanup() {
+    this.fireParticles.forEach((particles) => this.scene.remove(particles));
+    this.smokeParticles.forEach((particles) => this.scene.remove(particles));
+    this.fireParticles = [];
+    this.smokeParticles = [];
+
     if (this.collisionSound) {
       this.collisionSound.disconnect();
       this.collisionSound = null;
+    }
+    if (this.explosionSound) {
+      this.explosionSound.disconnect();
+      this.explosionSound = null;
     }
   }
 }
