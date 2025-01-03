@@ -45,6 +45,16 @@ export class ObstacleSystem {
     }
   }
 
+  public getObstaclesInRadius(
+    center: THREE.Vector3,
+    radius: number
+  ): THREE.Group[] {
+    return this.obstacles.filter((obstacle) => {
+      const distance = obstacle.position.distanceTo(center);
+      return distance <= radius;
+    });
+  }
+
   private createObstacle(): THREE.Group {
     const buoyGroup = new THREE.Group();
 
@@ -142,7 +152,7 @@ export class ObstacleSystem {
           this.createHitEffect(bullet.position);
 
           if (obstacle.userData.currentHits >= obstacle.userData.hitPoints) {
-            this.destroyObstacle(obstacle, i);
+            this.destroyObstacle(obstacle);
           } else {
             this.updateObstacleAppearance(obstacle);
           }
@@ -197,7 +207,7 @@ export class ObstacleSystem {
     }
   }
 
-  private updateObstacleAppearance(obstacle: THREE.Group) {
+  public updateObstacleAppearance(obstacle: THREE.Group) {
     const damageRatio =
       obstacle.userData.currentHits / obstacle.userData.hitPoints;
 
@@ -215,11 +225,14 @@ export class ObstacleSystem {
     });
   }
 
-  private destroyObstacle(obstacle: THREE.Group, index: number) {
-    this.scoreSystem.addEnemyKillScore(obstacle.position);
-    this.createExplosionEffect(obstacle.position);
-    this.scene.remove(obstacle);
-    this.obstacles.splice(index, 1);
+  public destroyObstacle(obstacle: THREE.Group) {
+    const index = this.obstacles.indexOf(obstacle);
+    if (index !== -1) {
+      this.scoreSystem.addEnemyKillScore(obstacle.position);
+      this.createExplosionEffect(obstacle.position);
+      this.scene.remove(obstacle);
+      this.obstacles.splice(index, 1);
+    }
   }
 
   private createExplosionEffect(position: THREE.Vector3) {

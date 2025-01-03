@@ -1,18 +1,21 @@
 import * as THREE from "three";
 import { EnemyBoatSystem } from "./enemyBoatSystem";
+import { ObstacleSystem } from "./obstacleSystem";
 
 export class BombSystem {
   private bombs: THREE.Mesh[] = [];
   private lastBombTime: number = 0;
   private scene: THREE.Scene;
   private enemyBoatSystem: EnemyBoatSystem;
+  private obstacleSystem: ObstacleSystem;
   private explosionTexture: THREE.Texture;
   private explosionSound: THREE.Audio | null = null;
   private readonly BOMB_COOLDOWN = 5000; // 5s cooldown
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
-  private readonly EXPLOSION_RADIUS = 20;
+  private readonly EXPLOSION_RADIUS = 200;
   private readonly GRAVITY = -9.81;
+  private readonly OBSTACLE_DAMAGE = 3;
 
   private bombGeometry = new THREE.SphereGeometry(this.BOMB_SIZE);
   private bombMaterial = new THREE.MeshStandardMaterial({
@@ -25,10 +28,12 @@ export class BombSystem {
   constructor(
     scene: THREE.Scene,
     enemyBoatSystem: EnemyBoatSystem,
+    obstacleSystem: ObstacleSystem,
     camera: THREE.Camera
   ) {
     this.scene = scene;
     this.enemyBoatSystem = enemyBoatSystem;
+    this.obstacleSystem = obstacleSystem;
     const textureLoader = new THREE.TextureLoader();
     this.explosionTexture = textureLoader.load("/textures/explosion.webp");
     this.initializeSounds(camera);
@@ -49,6 +54,29 @@ export class BombSystem {
     } catch (error) {
       console.error("Error loading explosion sound:", error);
     }
+  }
+
+  private handleExplosionDamage(position: THREE.Vector3) {
+    const affectedObstacles = this.obstacleSystem.getObstaclesInRadius(
+      position,
+      this.EXPLOSION_RADIUS
+    );
+
+    affectedObstacles.forEach((obstacle) => {
+      const distance = position.distanceTo(obstacle.position);
+      const damageMultiplier = 1 - distance / this.EXPLOSION_RADIUS;
+      const damage = Math.ceil(this.OBSTACLE_DAMAGE * damageMultiplier);
+
+      for (let i = 0; i < damage; i++) {
+        obstacle.userData.currentHits++;
+      }
+
+      if (obstacle.userData.currentHits >= obstacle.userData.hitPoints) {
+        this.obstacleSystem.destroyObstacle(obstacle);
+      } else {
+        this.obstacleSystem.updateObstacleAppearance(obstacle);
+      }
+    });
   }
 
   createBomb(turret: THREE.Object3D) {
@@ -92,6 +120,8 @@ export class BombSystem {
     explosion.scale.set(initialScale, initialScale, 1);
 
     this.scene.add(explosion);
+
+    this.handleExplosionDamage(position);
 
     // if (this.enemyBoatSystem) {
     //   this.enemyBoatSystem.handleExplosion(position, this.EXPLOSION_RADIUS);

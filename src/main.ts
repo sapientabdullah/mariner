@@ -134,14 +134,14 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
     handleGameOver();
   });
   enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat, camera);
-  bombSystem = new BombSystem(scene, enemyBoatSystem, camera);
+  obstacleSystem = new ObstacleSystem(scene, scoreSystem, camera);
+  bombSystem = new BombSystem(scene, enemyBoatSystem, obstacleSystem, camera);
   sharkSystem = new SharkSystem(scene, boat, scoreSystem);
   waterSpoutSystem = new WaterSpoutSystem(scene, camera, boat);
   checkpointSystem = new CheckpointSystem(scene, camera, () => {
     isPaused = true;
     handleGameOver();
   });
-  obstacleSystem = new ObstacleSystem(scene, scoreSystem, camera);
   bulletSystem = new BulletSystem(scene, oceanSystem.water.position.y, camera);
 });
 
