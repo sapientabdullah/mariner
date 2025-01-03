@@ -10,6 +10,7 @@ export class BombSystem {
   private obstacleSystem: ObstacleSystem;
   private explosionTexture: THREE.Texture;
   private explosionSound: THREE.Audio | null = null;
+  private firingSound: THREE.Audio | null = null;
   private readonly BOMB_COOLDOWN = 5000; // 5s cooldown
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
@@ -35,7 +36,7 @@ export class BombSystem {
     this.enemyBoatSystem = enemyBoatSystem;
     this.obstacleSystem = obstacleSystem;
     const textureLoader = new THREE.TextureLoader();
-    this.explosionTexture = textureLoader.load("/textures/explosion.webp");
+    this.explosionTexture = textureLoader.load("/textures/bomb-explosion.png");
     this.initializeSounds(camera);
   }
 
@@ -47,12 +48,20 @@ export class BombSystem {
 
     try {
       const explosionSound = new THREE.Audio(listener);
-      const buffer = await audioLoader.loadAsync("/audio/explosion.mp3");
-      explosionSound.setBuffer(buffer);
+      const explosionBuffer = await audioLoader.loadAsync(
+        "/audio/explosion.mp3"
+      );
+      explosionSound.setBuffer(explosionBuffer);
       explosionSound.setVolume(0.5);
       this.explosionSound = explosionSound;
+
+      const firingSound = new THREE.Audio(listener);
+      const firingBuffer = await audioLoader.loadAsync("/audio/bomb-fire.mp3");
+      firingSound.setBuffer(firingBuffer);
+      firingSound.setVolume(1);
+      this.firingSound = firingSound;
     } catch (error) {
-      console.error("Error loading explosion sound:", error);
+      console.error("Error loading sounds:", error);
     }
   }
 
@@ -103,6 +112,10 @@ export class BombSystem {
     this.scene.add(bomb);
     this.bombs.push(bomb);
     this.lastBombTime = currentTime;
+
+    if (this.firingSound && !this.firingSound.isPlaying) {
+      this.firingSound.play();
+    }
   }
 
   private createExplosion(position: THREE.Vector3) {
@@ -176,6 +189,10 @@ export class BombSystem {
     if (this.explosionSound) {
       this.explosionSound.disconnect();
       this.explosionSound = null;
+    }
+    if (this.firingSound) {
+      this.firingSound.disconnect();
+      this.firingSound = null;
     }
   }
 }
