@@ -99,6 +99,10 @@ export function updateCompass(checkpointSystem?: CheckpointSystem) {
       if (pointer) {
         pointer.style.left = `${compassDirection * 3}px`;
 
+        const timeRemaining = checkpointSystem.getRemainingTime();
+        pointer.style.borderBottomColor =
+          timeRemaining <= 10 ? "#ff0000" : "#00ff00";
+
         const compassStrip = document.querySelector(".compass-strip");
         if (pointer.parentElement !== compassStrip) {
           compassStrip?.appendChild(pointer);
