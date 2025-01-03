@@ -10,6 +10,7 @@ export class EnemyBoatSystem {
   private playerBoat: THREE.Object3D;
   private collisionSound: THREE.Audio | null = null;
   private explosionSound: THREE.Audio | null = null;
+  private engineSound: THREE.Audio | null = null;
   private fireTexture: THREE.Texture | null = null;
   private camera: THREE.Camera;
 
@@ -53,11 +54,14 @@ export class EnemyBoatSystem {
     try {
       const collisionSound = new THREE.Audio(listener);
       const explosionSound = new THREE.Audio(listener);
+      const engineSound = new THREE.Audio(listener);
 
-      const [collisionBuffer, explosionBuffer] = await Promise.all([
-        audioLoader.loadAsync("/audio/collision.mp3"),
-        audioLoader.loadAsync("/audio/explosion.mp3"),
-      ]);
+      const [collisionBuffer, explosionBuffer, engineBuffer] =
+        await Promise.all([
+          audioLoader.loadAsync("/audio/collision.mp3"),
+          audioLoader.loadAsync("/audio/explosion.mp3"),
+          audioLoader.loadAsync("/audio/enemy-engine.mp3"),
+        ]);
 
       collisionSound.setBuffer(collisionBuffer);
       collisionSound.setVolume(0.5);
@@ -66,6 +70,13 @@ export class EnemyBoatSystem {
       explosionSound.setBuffer(explosionBuffer);
       explosionSound.setVolume(0.7);
       this.explosionSound = explosionSound;
+
+      engineSound.setBuffer(engineBuffer);
+      engineSound.setLoop(true);
+      engineSound.setVolume(0.3);
+      this.engineSound = engineSound;
+
+      this.engineSound.play();
     } catch (error) {
       console.error("Error loading sounds:", error);
     }
@@ -155,19 +166,14 @@ export class EnemyBoatSystem {
 
   private createEnemyBoat() {
     const enemyLoader = new GLTFLoader(loadingManager);
-    enemyLoader.load("/models/boat/scene.gltf", (gltf) => {
+    enemyLoader.load("/models/enemy-ship.glb", (gltf) => {
       this.enemyBoat = gltf.scene;
       this.enemyBoat.scale.set(10, 10, 10);
-      this.enemyBoat.position.set(100, 5, 100);
+      this.enemyBoat.position.set(1000, 5, -1000);
       this.enemyBoat.rotation.set(0, Math.PI, 0);
       this.enemyBoat.traverse((node) => {
         if ((node as THREE.Mesh).isMesh) {
           node.castShadow = true;
-          const material = (node as THREE.Mesh)
-            .material as THREE.MeshStandardMaterial;
-          if (material) {
-            material.color.setHex(0xff0000);
-          }
         }
       });
       this.scene.add(this.enemyBoat);
@@ -328,6 +334,9 @@ export class EnemyBoatSystem {
     currentSpeed: number;
   } {
     if (!this.enemyBoat || this.isDestroyed) {
+      if (this.engineSound && this.engineSound.isPlaying) {
+        this.engineSound.stop();
+      }
       return { collisionOccurred: false, currentSpeed: 0 };
     }
 
@@ -460,6 +469,11 @@ export class EnemyBoatSystem {
     if (this.explosionSound) {
       this.explosionSound.disconnect();
       this.explosionSound = null;
+    }
+    if (this.engineSound) {
+      this.engineSound.stop();
+      this.engineSound.disconnect();
+      this.engineSound = null;
     }
   }
 }

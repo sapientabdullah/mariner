@@ -120,7 +120,7 @@ export function startGame() {
 loader.load("/models/boat/scene.gltf", (gltf) => {
   boat = gltf.scene;
   boat.scale.set(10, 10, 10);
-  boat.position.set(0, 5, 0);
+  boat.position.set(100, 5, 0);
   boat.rotation.set(0, Math.PI, 0);
   boat.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) {
