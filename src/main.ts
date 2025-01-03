@@ -146,7 +146,7 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
   waterSpoutSystem = new WaterSpoutSystem(scene, camera, boat);
   checkpointSystem = new CheckpointSystem(scene, camera, () => {
     isPaused = true;
-    handleGameOver();
+    handleGameOver("time");
   });
   bulletSystem = new BulletSystem(scene, oceanSystem.water.position.y, camera);
 });
@@ -744,15 +744,10 @@ function setupEventListeners() {
   });
 }
 
-function handleGameOver() {
+function handleGameOver(reason = "default") {
   if (healthSystem) {
     healthSystem.reset();
   }
-
-  cleanupAudio();
-
-  bulletSystem?.cleanup();
-  bombSystem?.cleanup();
 
   currentSpeed = 0;
   targetTilt = 0;
@@ -771,6 +766,15 @@ function handleGameOver() {
   finalScoreElement.textContent = scoreSystem.getScore().toString();
   playerRankElement.textContent = scoreSystem.getRank(scoreSystem.getScore());
 
+  const gameOverText = document.getElementById("game-over-text");
+  if (gameOverText) {
+    if (reason === "time") {
+      gameOverText.innerText = "Time's Up";
+    } else {
+      gameOverText.innerText = "Mission Failed";
+    }
+  }
+
   gameOverOverlay.classList.remove("hidden");
 }
 
@@ -788,6 +792,8 @@ function cleanup() {
   }
   cleanupAudio();
   removePauseMenuListeners();
+  bulletSystem?.cleanup();
+  bombSystem?.cleanup();
   renderer.domElement.style.cursor = "auto";
 }
 
