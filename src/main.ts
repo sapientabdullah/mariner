@@ -51,6 +51,7 @@ const audioListener = new THREE.AudioListener();
 camera.add(audioListener);
 
 let previousAnimationFrame: number | null = null;
+let isGameOver = false;
 let isPaused = false;
 let userPaused = false;
 let isAnimating = false;
@@ -654,6 +655,10 @@ function handleGameResume() {
 }
 
 function togglePause() {
+  if (isGameOver) {
+    return;
+  }
+
   userPaused = !userPaused;
   isPaused = !isPaused;
 
@@ -745,6 +750,7 @@ function setupEventListeners() {
 }
 
 function handleGameOver(reason = "default") {
+  isGameOver = true;
   if (healthSystem) {
     healthSystem.reset();
   }
