@@ -15,6 +15,8 @@ export class CheckpointSystem {
   private readonly TIME_PER_CHECKPOINT = 30;
   private timeRemaining: number;
   private onTimeUp: () => void;
+  private ringMaterial: THREE.MeshBasicMaterial | null = null;
+  private lineMaterial: THREE.MeshBasicMaterial | null = null;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera, onTimeUp: () => void) {
     this.scene = scene;
@@ -78,6 +80,16 @@ export class CheckpointSystem {
       this.timeSprite.position.copy(checkpointPosition);
       this.timeSprite.position.y += this.LINE_HEIGHT + 50;
     }
+
+    this.updateCheckpointColors();
+  }
+
+  private updateCheckpointColors() {
+    if (this.ringMaterial && this.lineMaterial) {
+      const color = this.timeRemaining <= 10 ? 0xff0000 : 0x00ff00;
+      this.ringMaterial.color.setHex(color);
+      this.lineMaterial.color.setHex(color);
+    }
   }
 
   private generateNextCheckpoint() {
@@ -115,18 +127,18 @@ export class CheckpointSystem {
       16,
       50
     );
-    const ringMaterial = new THREE.MeshBasicMaterial({
+    this.ringMaterial = new THREE.MeshBasicMaterial({
       color: 0x00ff00,
       transparent: true,
       opacity: 0.5,
     });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    const ring = new THREE.Mesh(ringGeometry, this.ringMaterial);
     ring.position.copy(position);
     ring.rotation.x = Math.PI / 2;
 
     const lineGeometry = new THREE.CylinderGeometry(1, 1, this.LINE_HEIGHT, 8);
-    const lineMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const line = new THREE.Mesh(lineGeometry, lineMaterial);
+    this.lineMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const line = new THREE.Mesh(lineGeometry, this.lineMaterial);
     line.position.copy(position);
     line.position.y += this.LINE_HEIGHT / 2;
 
