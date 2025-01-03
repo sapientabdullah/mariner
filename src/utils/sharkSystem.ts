@@ -102,4 +102,15 @@ export class SharkSystem {
       shark.rotation.z = Math.sin(time * 2) * 0.05;
     });
   }
+  public handleExplosion(explosionPos: THREE.Vector3, explosionRadius: number) {
+    this.sharks = this.sharks.filter((shark) => {
+      const distanceToExplosion = shark.position.distanceTo(explosionPos);
+      if (distanceToExplosion <= explosionRadius) {
+        this.scoreSystem.addSharkKillScore(shark.position.clone());
+        this.scene.remove(shark);
+        return false;
+      }
+      return true;
+    });
+  }
 }

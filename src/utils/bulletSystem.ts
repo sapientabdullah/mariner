@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { createMuzzleFlash } from "./createMuzzleFlash";
+import { ObstacleSystem } from "./obstacleSystem";
+import { EnemyBoatSystem } from "./enemyBoatSystem";
 
 export class BulletSystem {
   private scene: THREE.Scene;
@@ -148,7 +150,11 @@ export class BulletSystem {
     }
   }
 
-  update(deltaTime: number, obstacleSystem: any, enemyBoatSystem: any) {
+  update(
+    deltaTime: number,
+    obstacleSystem: ObstacleSystem,
+    enemyBoatSystem: EnemyBoatSystem
+  ) {
     const currentTime = performance.now();
 
     this.bullets = this.bullets.filter((bullet) => {

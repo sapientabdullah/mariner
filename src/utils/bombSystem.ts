@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { EnemyBoatSystem } from "./enemyBoatSystem";
 import { ObstacleSystem } from "./obstacleSystem";
+import { SharkSystem } from "./sharkSystem";
 
 export class BombSystem {
   private bombs: THREE.Mesh[] = [];
@@ -8,6 +9,7 @@ export class BombSystem {
   private scene: THREE.Scene;
   private enemyBoatSystem: EnemyBoatSystem;
   private obstacleSystem: ObstacleSystem;
+  private sharkSystem: SharkSystem;
   private explosionTexture: THREE.Texture;
   private explosionSound: THREE.Audio | null = null;
   private firingSound: THREE.Audio | null = null;
@@ -30,11 +32,13 @@ export class BombSystem {
     scene: THREE.Scene,
     enemyBoatSystem: EnemyBoatSystem,
     obstacleSystem: ObstacleSystem,
+    sharkSystem: SharkSystem,
     camera: THREE.Camera
   ) {
     this.scene = scene;
     this.enemyBoatSystem = enemyBoatSystem;
     this.obstacleSystem = obstacleSystem;
+    this.sharkSystem = sharkSystem;
     const textureLoader = new THREE.TextureLoader();
     this.explosionTexture = textureLoader.load("/textures/bomb-explosion.png");
     this.initializeSounds(camera);
@@ -89,6 +93,10 @@ export class BombSystem {
 
     if (this.enemyBoatSystem) {
       this.enemyBoatSystem.handleExplosion(position, this.EXPLOSION_RADIUS);
+    }
+
+    if (this.sharkSystem) {
+      this.sharkSystem.handleExplosion(position, this.EXPLOSION_RADIUS);
     }
   }
 

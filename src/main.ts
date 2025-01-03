@@ -135,8 +135,14 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
   });
   enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat, camera);
   obstacleSystem = new ObstacleSystem(scene, scoreSystem, camera);
-  bombSystem = new BombSystem(scene, enemyBoatSystem, obstacleSystem, camera);
   sharkSystem = new SharkSystem(scene, boat, scoreSystem);
+  bombSystem = new BombSystem(
+    scene,
+    enemyBoatSystem,
+    obstacleSystem,
+    sharkSystem,
+    camera
+  );
   waterSpoutSystem = new WaterSpoutSystem(scene, camera, boat);
   checkpointSystem = new CheckpointSystem(scene, camera, () => {
     isPaused = true;
