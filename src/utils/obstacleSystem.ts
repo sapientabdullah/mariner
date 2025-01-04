@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ScoreSystem } from "./scoringSystem";
+import { healthSystem } from "../main";
 
 abstract class BaseObstacle {
   protected group: THREE.Group;
@@ -114,17 +115,40 @@ class MineObstacle extends BaseObstacle {
     });
     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 
-    const spikeGeometry = new THREE.ConeGeometry(2, 8, 8);
+    const bodyGeometry = new THREE.CylinderGeometry(8, 8, 4, 32);
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+      color: 0x996633,
+      metalness: 0.5,
+      roughness: 0.2,
+    });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.rotation.x = Math.PI / 2;
+    sphere.add(body);
+
+    const spikeGeometry = new THREE.ConeGeometry(3, 12, 8);
+
     const spikeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x303030,
+      color: 0x663300,
       metalness: 0.8,
       roughness: 0.2,
     });
 
-    for (let i = 0; i < 12; i++) {
+    const numSpikes = 12;
+    const spikeDistance = 8;
+
+    for (let i = 0; i < numSpikes; i++) {
       const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
-      spike.position.normalize().multiplyScalar(10);
+
+      const phi = Math.acos(-1 + (2 * i) / numSpikes);
+      const theta = Math.sqrt(numSpikes * Math.PI) * phi;
+
+      const x = spikeDistance * Math.sin(phi) * Math.cos(theta);
+      const y = spikeDistance * Math.sin(phi) * Math.sin(theta);
+      const z = spikeDistance * Math.cos(phi);
+
+      spike.position.set(x, y, z);
       spike.lookAt(new THREE.Vector3(0, 0, 0));
+      spike.rotateX(-Math.PI / 2);
       sphere.add(spike);
     }
 
@@ -136,8 +160,9 @@ class MineObstacle extends BaseObstacle {
     });
     const chain = new THREE.Mesh(chainGeometry, chainMaterial);
     chain.position.y = -10;
+    sphere.add(chain);
 
-    this.group.add(sphere, chain);
+    this.group.add(sphere);
   }
 }
 
@@ -347,7 +372,7 @@ export class ObstacleSystem {
 
   private createExplosionEffect(position: THREE.Vector3) {
     const particleCount = 8;
-    const size = 15;
+    const size = 100;
 
     const spriteMaterial = new THREE.SpriteMaterial({
       map: this.explosionTexture,
@@ -414,11 +439,18 @@ export class ObstacleSystem {
     let currentSpeed = 0;
     let collided = false;
 
-    for (const obstacle of this.obstacles) {
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obstacle = this.obstacles[i];
       const distance = boat.position.distanceTo(obstacle.position);
       const minDistance = 15;
 
       if (distance < minDistance) {
+        if (obstacle.userData.type === "MineObstacle") {
+          this.destroyObstacle(obstacle);
+          this.createExplosionEffect(obstacle.position);
+          healthSystem.takeDamage(20);
+        }
+
         const pushBack = new THREE.Vector3()
           .subVectors(boat.position, obstacle.position)
           .normalize()

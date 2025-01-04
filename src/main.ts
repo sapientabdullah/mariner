@@ -97,7 +97,7 @@ let sharkSystem: SharkSystem;
 let waterSpoutSystem: WaterSpoutSystem;
 let checkpointSystem: CheckpointSystem;
 let enemyBoatSystem: EnemyBoatSystem;
-let healthSystem: HealthSystem;
+export let healthSystem: HealthSystem;
 let bulletSystem: BulletSystem;
 
 const keysPressed: { [key: string]: boolean } = {};
