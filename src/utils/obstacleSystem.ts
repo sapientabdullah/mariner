@@ -364,7 +364,9 @@ export class ObstacleSystem {
     const index = this.obstacles.indexOf(obstacle);
     if (index !== -1) {
       this.scoreSystem.addEnemyKillScore(obstacle.position);
-      this.createExplosionEffect(obstacle.position);
+      if (obstacle.userData.type === "MineObstacle") {
+        this.createExplosionEffect(obstacle.position);
+      }
       this.scene.remove(obstacle);
       this.obstacles.splice(index, 1);
     }

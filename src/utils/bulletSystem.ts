@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { createMuzzleFlash } from "./createMuzzleFlash";
 import { ObstacleSystem } from "./obstacleSystem";
 import { EnemyBoatSystem } from "./enemyBoatSystem";
+import { SmokeSystem } from "./smokeSystem";
 
 export class BulletSystem {
   private scene: THREE.Scene;
@@ -12,6 +13,7 @@ export class BulletSystem {
   private oceanWaterLevel: number;
   private textureLoader: THREE.TextureLoader;
   private splashTexture: THREE.Texture;
+  private smokeSystem: SmokeSystem;
 
   private readonly BULLET_SPEED = 500;
   private readonly BULLET_SIZE = 0.5;
@@ -35,6 +37,7 @@ export class BulletSystem {
     this.oceanWaterLevel = oceanWaterLevel;
     this.textureLoader = new THREE.TextureLoader();
     this.splashTexture = this.textureLoader.load("/textures/bullet-splash.png");
+    this.smokeSystem = new SmokeSystem(scene, camera);
     this.bulletGeometry = new THREE.SphereGeometry(this.BULLET_SIZE);
     this.bulletMaterial = new THREE.MeshStandardMaterial({
       color: 0xff7700,
@@ -108,6 +111,7 @@ export class BulletSystem {
     this.bullets.push(bullet);
 
     this.createMuzzleFlashEffect(turret);
+    this.smokeSystem.createSmoke(bullet.position.clone(), direction.clone());
     this.playGunSound();
   }
 
@@ -156,6 +160,8 @@ export class BulletSystem {
     enemyBoatSystem: EnemyBoatSystem
   ) {
     const currentTime = performance.now();
+
+    this.smokeSystem.update(deltaTime);
 
     this.bullets = this.bullets.filter((bullet) => {
       bullet.userData.velocity.y += this.GRAVITY * deltaTime;
@@ -257,6 +263,7 @@ export class BulletSystem {
   }
 
   cleanup() {
+    this.smokeSystem.cleanup();
     this.bullets.forEach((bullet) => this.scene.remove(bullet));
     this.bullets = [];
     this.gunSoundPool.forEach((sound) => {
