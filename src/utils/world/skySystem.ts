@@ -12,7 +12,12 @@ export class SkySystem {
   private scene: THREE.Scene;
   private lastUpdateTime: number;
 
-  constructor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, water: Water) {
+  constructor(
+    scene: THREE.Scene,
+    renderer: THREE.WebGLRenderer,
+    water: Water,
+    showGUI: boolean = false
+  ) {
     this.scene = scene;
     this.water = water;
     this.sun = new THREE.Vector3();
@@ -37,7 +42,9 @@ export class SkySystem {
     this.pmremGenerator.compileEquirectangularShader();
 
     this.updateSun();
-    this.setupGUI();
+    if (showGUI) {
+      this.setupGUI();
+    }
   }
 
   private updateSun() {

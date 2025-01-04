@@ -13,16 +13,22 @@ export class EnemyBoatSystem {
   private engineSound: THREE.Audio | null = null;
   private fireTexture: THREE.Texture | null = null;
   private camera: THREE.Camera;
+  private bullets: THREE.Mesh[] = [];
+  private cannonSound: THREE.Audio | null = null;
+  private readonly SHOOTING_RANGE = 200;
+  private readonly SHOOTING_INTERVAL = 1;
+  private readonly ENEMY_SPEED = 20;
+  private readonly ENEMY_ROTATION_SPEED = 0.02;
+  private readonly DAMAGE_THRESHOLD = 30;
+  private readonly BULLET_COLLISION_RADIUS = 25;
+  private readonly MIN_DISTANCE = 300;
 
+  private lastShotTime = 0;
   private maxHealth = 100;
   private currentHealth = 100;
   private isDestroyed = false;
   private fireParticles: THREE.Points[] = [];
   private smokeParticles: THREE.Points[] = [];
-
-  private readonly ENEMY_SPEED = 20;
-  private readonly ENEMY_ROTATION_SPEED = 0.02;
-  private readonly DAMAGE_THRESHOLD = 30;
 
   constructor(
     scene: THREE.Scene,
@@ -37,6 +43,142 @@ export class EnemyBoatSystem {
     this.initializeSounds(camera);
     this.loadFireTexture();
     this.createEnemyBoat();
+  }
+
+  private createBullet(
+    position: THREE.Vector3,
+    direction: THREE.Vector3
+  ): THREE.Mesh {
+    const bulletGeometry = new THREE.SphereGeometry(1, 8, 8);
+    const bulletMaterial = new THREE.MeshStandardMaterial({
+      color: 0xff0000,
+      emissive: 0xff0000,
+      emissiveIntensity: 0.5,
+    });
+    const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+
+    bullet.position.copy(position);
+    bullet.userData.direction = direction;
+    bullet.userData.speed = 100; // Bullet speed
+    bullet.userData.creationTime = performance.now();
+    bullet.userData.maxLifetime = 3000; // Bullet disappears after 3 seconds
+
+    return bullet;
+  }
+
+  private shoot() {
+    if (!this.enemyBoat || this.isDestroyed) return;
+
+    const currentTime = performance.now();
+    if (currentTime - this.lastShotTime < this.SHOOTING_INTERVAL) return;
+
+    const leftCannonOffset = new THREE.Vector3(-20, 20, 0);
+    const rightCannonOffset = new THREE.Vector3(20, 20, 0);
+    leftCannonOffset.applyQuaternion(this.enemyBoat.quaternion);
+    rightCannonOffset.applyQuaternion(this.enemyBoat.quaternion);
+
+    const directionToPlayer = new THREE.Vector3()
+      .subVectors(this.playerBoat.position, this.enemyBoat.position)
+      .normalize();
+
+    const leftBullet = this.createBullet(
+      this.enemyBoat.position.clone().add(leftCannonOffset),
+      directionToPlayer
+    );
+    const rightBullet = this.createBullet(
+      this.enemyBoat.position.clone().add(rightCannonOffset),
+      directionToPlayer
+    );
+
+    this.bullets.push(leftBullet, rightBullet);
+    this.scene.add(leftBullet, rightBullet);
+
+    if (this.cannonSound && !this.cannonSound.isPlaying) {
+      this.cannonSound.play();
+    }
+
+    this.createMuzzleFlash(leftBullet.position);
+    this.createMuzzleFlash(rightBullet.position);
+
+    this.lastShotTime = currentTime;
+  }
+
+  private createMuzzleFlash(position: THREE.Vector3) {
+    const particleCount = 20;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 2;
+      positions[i] = position.x + Math.cos(angle) * radius;
+      positions[i + 1] = position.y + Math.random() * 2;
+      positions[i + 2] = position.z + Math.sin(angle) * radius;
+    }
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      color: 0xff9933,
+      size: 0.5,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    this.scene.add(particles);
+
+    const startTime = performance.now();
+    const duration = 200;
+
+    const animateMuzzleFlash = () => {
+      const elapsed = performance.now() - startTime;
+      if (elapsed > duration) {
+        this.scene.remove(particles);
+        return;
+      }
+
+      material.opacity = 1 - elapsed / duration;
+      requestAnimationFrame(animateMuzzleFlash);
+    };
+
+    animateMuzzleFlash();
+  }
+
+  private updateBullets(deltaTime: number) {
+    const currentTime = performance.now();
+    const bulletsToRemove: THREE.Mesh[] = [];
+
+    this.bullets.forEach((bullet) => {
+      const direction = bullet.userData.direction as THREE.Vector3;
+      bullet.position.add(
+        direction.clone().multiplyScalar(bullet.userData.speed * deltaTime)
+      );
+
+      if (
+        currentTime - bullet.userData.creationTime >
+        bullet.userData.maxLifetime
+      ) {
+        bulletsToRemove.push(bullet);
+      }
+
+      const distanceToPlayer = bullet.position.distanceTo(
+        this.playerBoat.position
+      );
+      if (distanceToPlayer < this.BULLET_COLLISION_RADIUS) {
+        bulletsToRemove.push(bullet);
+        this.createBulletHitEffect(bullet.position);
+      }
+    });
+
+    bulletsToRemove.forEach((bullet) => {
+      this.scene.remove(bullet);
+      const index = this.bullets.indexOf(bullet);
+      if (index > -1) {
+        this.bullets.splice(index, 1);
+      }
+    });
   }
 
   private loadFireTexture() {
@@ -55,12 +197,14 @@ export class EnemyBoatSystem {
       const collisionSound = new THREE.Audio(listener);
       const explosionSound = new THREE.Audio(listener);
       const engineSound = new THREE.Audio(listener);
+      const cannonSound = new THREE.Audio(listener);
 
-      const [collisionBuffer, explosionBuffer, engineBuffer] =
+      const [collisionBuffer, explosionBuffer, engineBuffer, cannonBuffer] =
         await Promise.all([
           audioLoader.loadAsync("/audio/collision.mp3"),
           audioLoader.loadAsync("/audio/explosion.mp3"),
           audioLoader.loadAsync("/audio/enemy-engine.mp3"),
+          audioLoader.loadAsync("/audio/cannon.mp3"),
         ]);
 
       collisionSound.setBuffer(collisionBuffer);
@@ -75,6 +219,10 @@ export class EnemyBoatSystem {
       engineSound.setLoop(true);
       engineSound.setVolume(0.3);
       this.engineSound = engineSound;
+
+      cannonSound.setBuffer(cannonBuffer);
+      cannonSound.setVolume(0.4);
+      this.cannonSound = cannonSound;
 
       this.engineSound.play();
     } catch (error) {
@@ -340,6 +488,8 @@ export class EnemyBoatSystem {
       return { collisionOccurred: false, currentSpeed: 0 };
     }
 
+    this.updateBullets(deltaTime);
+
     this.fireParticles.forEach((particles) => {
       const positions = particles.geometry.attributes.position
         .array as Float32Array;
@@ -392,14 +542,17 @@ export class EnemyBoatSystem {
     const distanceToPlayer = this.enemyBoat.position.distanceTo(
       this.playerBoat.position
     );
-    const minDistance = 25;
+
+    if (distanceToPlayer <= this.SHOOTING_RANGE && !this.isDestroyed) {
+      this.shoot();
+    }
 
     let currentSpeed = 0;
     let collisionOccurred = false;
 
     const speedMultiplier = this.currentHealth / this.maxHealth;
 
-    if (distanceToPlayer > minDistance) {
+    if (distanceToPlayer > this.MIN_DISTANCE) {
       this.enemyBoat.position.x +=
         directionToPlayer.x * this.ENEMY_SPEED * deltaTime * speedMultiplier;
       this.enemyBoat.position.z +=
@@ -418,7 +571,7 @@ export class EnemyBoatSystem {
     } else {
       collisionOccurred = true;
       const pushBackDirection = directionToPlayer.clone().negate();
-      const pushBackStrength = (minDistance - distanceToPlayer) * 2;
+      const pushBackStrength = (this.MIN_DISTANCE - distanceToPlayer) * 4;
 
       this.enemyBoat.position.add(
         pushBackDirection.clone().multiplyScalar(pushBackStrength)
@@ -461,6 +614,8 @@ export class EnemyBoatSystem {
     this.smokeParticles.forEach((particles) => this.scene.remove(particles));
     this.fireParticles = [];
     this.smokeParticles = [];
+    this.bullets.forEach((bullet) => this.scene.remove(bullet));
+    this.bullets = [];
 
     if (this.collisionSound) {
       this.collisionSound.disconnect();
@@ -474,6 +629,10 @@ export class EnemyBoatSystem {
       this.engineSound.stop();
       this.engineSound.disconnect();
       this.engineSound = null;
+    }
+    if (this.cannonSound) {
+      this.cannonSound.disconnect();
+      this.cannonSound = null;
     }
   }
 }
