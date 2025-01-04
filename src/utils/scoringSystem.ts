@@ -194,9 +194,11 @@ export class ScoreSystem {
     } else if (score >= 2000) {
       return "Commander";
     } else if (score >= 1000) {
-      return "Lieutenant";
+      return "Lieutenant Commander";
     } else if (score >= 500) {
-      return "Sergeant";
+      return "Lieutenant";
+    } else if (score >= 200) {
+      return "Ensign";
     } else {
       return "Seaman";
     }

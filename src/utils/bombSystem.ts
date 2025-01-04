@@ -11,21 +11,27 @@ export class BombSystem {
   private obstacleSystem: ObstacleSystem;
   private sharkSystem: SharkSystem;
   private explosionTexture: THREE.Texture;
+  private splashTexture: THREE.Texture;
   private explosionSound: THREE.Audio | null = null;
   private firingSound: THREE.Audio | null = null;
   private readonly BOMB_COOLDOWN = 5000;
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
-  private readonly EXPLOSION_RADIUS = 200;
+  private readonly EXPLOSION_RADIUS = 400;
   private readonly GRAVITY = -9.81;
   private readonly OBSTACLE_DAMAGE = 3;
 
-  private bombGeometry = new THREE.SphereGeometry(this.BOMB_SIZE);
+  private bombGeometry = new THREE.CylinderGeometry(
+    this.BOMB_SIZE,
+    this.BOMB_SIZE,
+    4,
+    12
+  );
   private bombMaterial = new THREE.MeshStandardMaterial({
-    color: 0x333333,
-    emissive: 0x111111,
-    metalness: 0.9,
-    roughness: 0.2,
+    color: 0x555555,
+    roughness: 0.5,
+    metalness: 1,
+    emissive: 0x222222,
   });
 
   constructor(
@@ -41,6 +47,7 @@ export class BombSystem {
     this.sharkSystem = sharkSystem;
     const textureLoader = new THREE.TextureLoader();
     this.explosionTexture = textureLoader.load("/textures/bomb-explosion.png");
+    this.splashTexture = textureLoader.load("/textures/bullet-splash.png");
     this.initializeSounds(camera);
   }
 
@@ -121,6 +128,12 @@ export class BombSystem {
     bomb.userData.velocity = direction.multiplyScalar(this.BOMB_SPEED);
     bomb.userData.creationTime = currentTime;
 
+    bomb.rotation.x = Math.random() * Math.PI;
+    bomb.rotation.y = Math.random() * Math.PI;
+    bomb.rotation.z = Math.random() * Math.PI;
+
+    bomb.scale.set(3, 3, 3);
+
     this.scene.add(bomb);
     this.bombs.push(bomb);
     this.lastBombTime = currentTime;
@@ -141,7 +154,7 @@ export class BombSystem {
     const explosion = new THREE.Sprite(explosionMaterial);
     explosion.position.copy(position);
 
-    const initialScale = this.EXPLOSION_RADIUS;
+    const initialScale = 100;
     explosion.scale.set(initialScale, initialScale, 1);
 
     this.scene.add(explosion);
@@ -174,14 +187,58 @@ export class BombSystem {
     animateExplosion();
   }
 
+  private createWaterSplash(position: THREE.Vector3) {
+    const splashMaterial = new THREE.SpriteMaterial({
+      map: this.splashTexture,
+      transparent: true,
+      opacity: 1,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const splash = new THREE.Sprite(splashMaterial);
+    splash.position.copy(position);
+
+    const initialScale = 200;
+    splash.scale.set(initialScale, initialScale, 1);
+
+    this.scene.add(splash);
+
+    const startTime = performance.now();
+    const duration = 800;
+
+    const animateSplash = () => {
+      const elapsed = performance.now() - startTime;
+      const progress = elapsed / duration;
+
+      if (progress >= 1) {
+        this.scene.remove(splash);
+        return;
+      }
+
+      splash.material.opacity = 1 - progress; // Fade out the splash
+      const currentScale = initialScale * (1 + progress * 2); // Increase size
+      splash.scale.set(currentScale, currentScale, 1);
+
+      requestAnimationFrame(animateSplash);
+    };
+
+    animateSplash();
+  }
+
   update(deltaTime: number, waterLevel: number) {
     this.bombs = this.bombs.filter((bomb) => {
       bomb.userData.velocity.y += this.GRAVITY * deltaTime;
       const movement = bomb.userData.velocity.clone().multiplyScalar(deltaTime);
       bomb.position.add(movement);
 
+      const rotationSpeed = bomb.userData.velocity.length() * 0.005;
+      bomb.rotation.x += rotationSpeed * deltaTime;
+      bomb.rotation.y += rotationSpeed * deltaTime;
+      bomb.rotation.z += rotationSpeed * deltaTime;
+
       if (bomb.position.y <= waterLevel) {
         this.createExplosion(bomb.position);
+        this.createWaterSplash(bomb.position);
         this.scene.remove(bomb);
         return false;
       }
