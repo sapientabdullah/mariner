@@ -2,25 +2,26 @@ import "./style.css";
 import * as THREE from "three";
 import { GLTFLoader, OrbitControls } from "three/examples/jsm/Addons.js";
 import { Audio, AudioLoader } from "three";
-import { SeagullSystem } from "./utils/seagullSystem";
+import { SeagullSystem } from "./utils/decorations/seagullSystem";
 import { WaterSplashSystem } from "./utils/effects/splashSystem";
 import { SkySystem } from "./utils/world/skySystem";
 import { updateCompass } from "./utils/ui/compassSystem";
 import { SpeedometerSystem } from "./utils/ui/speedometerSystem";
 import { OceanSystem } from "./utils/world/oceanSystem";
 import { MinimapSystem } from "./utils/ui/minimapSystem";
-import { EnemyBoatSystem } from "./utils/enemyBoatSystem";
-import { ObstacleSystem } from "./utils/obstacleSystem";
-import { StaticObjectSystem } from "./utils/staticObjectSystem";
-import { SharkSystem } from "./utils/sharkSystem";
+import { EnemyBoatSystem } from "./utils/enemies/enemyBoatSystem";
+import { ObstacleSystem } from "./utils/enemies/obstacleSystem";
+import { StaticObjectSystem } from "./utils/decorations/staticObjectSystem";
+import { SharkSystem } from "./utils/enemies/sharkSystem";
 import { WaterSpoutSystem } from "./utils/effects/waterSpoutSystem";
-import { CheckpointSystem } from "./utils/checkpointSystem";
+import { CheckpointSystem } from "./utils/progression/checkpointSystem";
 import { HealthSystem } from "./utils/ui/healthSystem";
 import { ReticleSystem } from "./utils/ui/reticleSystem";
-import { BombSystem } from "./utils/bombSystem";
-import { BulletSystem } from "./utils/bulletSystem";
+import { BombSystem } from "./utils/weapons/bombSystem";
+import { BulletSystem } from "./utils/weapons/bulletSystem";
 import { loadingManager } from "./utils/managers/loadingManager";
-import { ScoreSystem } from "./utils/scoringSystem";
+import { ScoreSystem } from "./utils/progression/scoringSystem";
+import { SubmarineSystem } from "./utils/enemies/submarineSystem";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -97,6 +98,7 @@ let sharkSystem: SharkSystem;
 let waterSpoutSystem: WaterSpoutSystem;
 let checkpointSystem: CheckpointSystem;
 let enemyBoatSystem: EnemyBoatSystem;
+let submarineSystem: SubmarineSystem;
 export let healthSystem: HealthSystem;
 let bulletSystem: BulletSystem;
 
@@ -135,6 +137,7 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
     handleGameOver();
   });
   enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat, camera);
+  submarineSystem = new SubmarineSystem(scene, waterSplashSystem, boat, camera);
   obstacleSystem = new ObstacleSystem(scene, scoreSystem, camera);
   sharkSystem = new SharkSystem(scene, boat, scoreSystem);
   bombSystem = new BombSystem(
@@ -302,6 +305,10 @@ function updateGameState(deltaTime: number) {
     }
   }
 
+  if (submarineSystem) {
+    submarineSystem.update(deltaTime);
+  }
+
   seagullSystem.update(deltaTime);
 
   if (boat && turret) {
@@ -338,7 +345,7 @@ function updateGameState(deltaTime: number) {
       currentSpeed = resultSpeed;
     }
 
-    minimapSystem.update(boat.position);
+    minimapSystem.update(boat.position, obstacleSystem.getObstacles());
 
     speedometer.update(currentSpeed);
     updateCompass(checkpointSystem);

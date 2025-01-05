@@ -8,6 +8,8 @@ export class MinimapSystem {
   radarContext: CanvasRenderingContext2D;
   radarAngle: number = 0;
   container: HTMLDivElement;
+  minePositions: THREE.Vector3[] = [];
+  blinkPhase: number = 0;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -71,6 +73,11 @@ export class MinimapSystem {
                 0% { transform: translateY(-100%); }
                 100% { transform: translateY(100%); }
             }
+            @keyframes blink {
+                0% { opacity: 1; }
+                50% { opacity: 0.2; }
+                100% { opacity: 1; }
+            }
         `;
     document.head.appendChild(style);
 
@@ -86,6 +93,55 @@ export class MinimapSystem {
     );
     this.minimapCamera.position.set(0, 200, 0);
     this.minimapCamera.lookAt(0, 0, 0);
+  }
+
+  updateMinePositions(obstacles: THREE.Group[]) {
+    this.minePositions = obstacles
+      .filter((obstacle) => obstacle.userData.type === "MineObstacle")
+      .map((mine) => mine.position.clone());
+  }
+
+  private drawMineSignals() {
+    const centerX = 100;
+    const centerY = 100;
+
+    this.blinkPhase += 0.05;
+    const blinkIntensity = (Math.sin(this.blinkPhase) + 1) / 2;
+
+    this.radarContext.save();
+
+    for (const minePos of this.minePositions) {
+      const dx = minePos.x - this.minimapCamera.position.x;
+      const dz = minePos.z - this.minimapCamera.position.z;
+
+      const scale = 0.5;
+      const radarX = centerX + dx * scale;
+      const radarY = centerY + dz * scale;
+      const distanceToCenter = Math.sqrt(
+        Math.pow(radarX - centerX, 2) + Math.pow(radarY - centerY, 2)
+      );
+
+      if (distanceToCenter <= 100) {
+        this.radarContext.beginPath();
+        this.radarContext.arc(radarX, radarY, 3, 0, Math.PI * 2);
+        this.radarContext.fillStyle = `rgba(255, 50, 50, ${blinkIntensity})`;
+        this.radarContext.fill();
+        this.radarContext.beginPath();
+        this.radarContext.arc(
+          radarX,
+          radarY,
+          6 + blinkIntensity * 2,
+          0,
+          Math.PI * 2
+        );
+        this.radarContext.strokeStyle = `rgba(255, 50, 50, ${
+          blinkIntensity * 0.5
+        })`;
+        this.radarContext.stroke();
+      }
+    }
+
+    this.radarContext.restore();
   }
 
   private drawGrid(ctx: CanvasRenderingContext2D) {
@@ -123,21 +179,23 @@ export class MinimapSystem {
     this.radarContext.fillStyle = gradient;
     this.radarContext.fill();
 
+    this.drawMineSignals();
+
     this.radarAngle += 0.02;
     if (this.radarAngle > Math.PI * 2) {
       this.radarAngle = 0;
     }
   }
 
-  update(boatPosition: THREE.Vector3) {
+  update(boatPosition: THREE.Vector3, obstacles: THREE.Group[]) {
     this.minimapCamera.position.set(
       boatPosition.x,
       this.minimapCamera.position.y,
       boatPosition.z
     );
 
+    this.updateMinePositions(obstacles);
     this.minimapRenderer.render(this.scene, this.minimapCamera);
-
     this.drawRadarSweep();
   }
 

@@ -27,7 +27,11 @@ export class WaterSpoutSystem {
     const listener = new THREE.AudioListener();
     camera.add(listener);
 
-    const whaleFiles = ["/audio/whale-1.mp3", "/audio/whale-2.mp3"];
+    const whaleFiles = [
+      "/audio/whale-1.mp3",
+      "/audio/whale-2.mp3",
+      "/audio/whale-3.mp3",
+    ];
 
     const audioLoader = new THREE.AudioLoader();
 

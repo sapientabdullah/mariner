@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { ScoreSystem } from "./scoringSystem";
-import { healthSystem } from "../main";
+import { ScoreSystem } from "../progression/scoringSystem";
+import { healthSystem } from "../../main";
 
 abstract class BaseObstacle {
   protected group: THREE.Group;
@@ -259,6 +259,10 @@ export class ObstacleSystem {
       const distance = obstacle.position.distanceTo(center);
       return distance <= radius;
     });
+  }
+
+  public getObstacles(): THREE.Group[] {
+    return this.obstacles;
   }
 
   private createObstacle(): THREE.Group {

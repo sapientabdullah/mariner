@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { EnemyBoatSystem } from "./enemyBoatSystem";
-import { ObstacleSystem } from "./obstacleSystem";
-import { SharkSystem } from "./sharkSystem";
+import { EnemyBoatSystem } from "../enemies/enemyBoatSystem";
+import { ObstacleSystem } from "../enemies/obstacleSystem";
+import { SharkSystem } from "../enemies/sharkSystem";
 
 export class BombSystem {
   private bombs: THREE.Mesh[] = [];

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
-import { WaterSplashSystem } from "./effects/splashSystem";
-import { loadingManager } from "./managers/loadingManager";
+import { WaterSplashSystem } from "../effects/splashSystem";
+import { loadingManager } from "../managers/loadingManager";
 
 export class EnemyBoatSystem {
   private enemyBoat: THREE.Object3D | null = null;

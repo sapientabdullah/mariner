@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
-import { loadingManager } from "./managers/loadingManager";
-import { ScoreSystem } from "./scoringSystem";
+import { loadingManager } from "../managers/loadingManager";
+import { ScoreSystem } from "../progression/scoringSystem";
 
 export class SharkSystem {
   private sharks: THREE.Object3D[] = [];

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { AudioListener, PositionalAudio, AudioLoader } from "three";
-import { boat } from "../main";
-import { isWithinBounds } from "./withinBounds";
+import { boat } from "../../main";
+import { isWithinBounds } from "../withinBounds";
 
 interface Seagull extends THREE.Group {
   wingL?: THREE.Mesh;
