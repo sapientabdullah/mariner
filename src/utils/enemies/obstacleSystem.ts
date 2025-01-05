@@ -48,6 +48,7 @@ abstract class BaseObstacle {
       hitPoints: this.hitPoints,
       currentHits: this.currentHits,
       type: this.constructor.name,
+      lastCollisionTime: 0,
     };
   }
 
@@ -472,10 +473,22 @@ export class ObstacleSystem {
       const minDistance = 15;
 
       if (distance < minDistance) {
-        if (obstacle.userData.type === "MineObstacle") {
-          this.destroyObstacle(obstacle);
-          this.createExplosionEffect(obstacle.position);
-          healthSystem.takeDamage(20);
+        if (
+          !obstacle.userData.lastCollisionTime ||
+          Date.now() - obstacle.userData.lastCollisionTime > 1000
+        ) {
+          if (obstacle.userData.type === "MineObstacle") {
+            this.destroyObstacle(obstacle);
+            this.createExplosionEffect(obstacle.position);
+            healthSystem.takeDamage(20);
+          } else {
+            healthSystem.takeDamage(10);
+            obstacle.userData.lastCollisionTime = Date.now();
+          }
+
+          if (this.collisionSound && !this.collisionSound.isPlaying) {
+            this.collisionSound.play();
+          }
         }
 
         const pushBack = new THREE.Vector3()
@@ -486,10 +499,6 @@ export class ObstacleSystem {
         boat.position.add(pushBack);
         currentSpeed *= 0.5;
         collided = true;
-
-        if (this.collisionSound && !this.collisionSound.isPlaying) {
-          this.collisionSound.play();
-        }
       }
     }
 

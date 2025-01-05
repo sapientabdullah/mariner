@@ -332,9 +332,6 @@ function updateGameState(deltaTime: number) {
     const { collided, newSpeed } = obstacleSystem.checkCollision(boat);
     if (collided) {
       currentSpeed = newSpeed;
-      if (healthSystem) {
-        healthSystem.takeDamage(5);
-      }
     }
 
     const { hasCollision, resultSpeed } = staticObjectSystem.checkCollisions(
@@ -345,7 +342,11 @@ function updateGameState(deltaTime: number) {
       currentSpeed = resultSpeed;
     }
 
-    minimapSystem.update(boat.position, obstacleSystem.getObstacles());
+    minimapSystem.update(
+      boat.position,
+      obstacleSystem.getObstacles(),
+      sharkSystem.getSharks()
+    );
 
     speedometer.update(currentSpeed);
     updateCompass(checkpointSystem);

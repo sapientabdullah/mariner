@@ -113,4 +113,7 @@ export class SharkSystem {
       return true;
     });
   }
+  public getSharks(): THREE.Object3D[] {
+    return this.sharks;
+  }
 }

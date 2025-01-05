@@ -9,6 +9,7 @@ export class MinimapSystem {
   radarAngle: number = 0;
   container: HTMLDivElement;
   minePositions: THREE.Vector3[] = [];
+  sharkPositions: THREE.Vector3[] = [];
   blinkPhase: number = 0;
 
   constructor(scene: THREE.Scene) {
@@ -101,6 +102,10 @@ export class MinimapSystem {
       .map((mine) => mine.position.clone());
   }
 
+  updateSharkPositions(sharks: THREE.Object3D[]) {
+    this.sharkPositions = sharks.map((shark) => shark.position.clone());
+  }
+
   private drawMineSignals() {
     const centerX = 100;
     const centerY = 100;
@@ -136,6 +141,52 @@ export class MinimapSystem {
         );
         this.radarContext.strokeStyle = `rgba(255, 50, 50, ${
           blinkIntensity * 0.5
+        })`;
+        this.radarContext.stroke();
+      }
+    }
+
+    this.radarContext.restore();
+  }
+
+  private drawSharkSignals() {
+    const centerX = 100;
+    const centerY = 100;
+    const blinkIntensity = (Math.sin(this.blinkPhase * 1.5) + 1) / 2; // Faster blink for sharks
+
+    this.radarContext.save();
+
+    for (const sharkPos of this.sharkPositions) {
+      const dx = sharkPos.x - this.minimapCamera.position.x;
+      const dz = sharkPos.z - this.minimapCamera.position.z;
+
+      const scale = 0.5;
+      const radarX = centerX + dx * scale;
+      const radarY = centerY + dz * scale;
+      const distanceToCenter = Math.sqrt(
+        Math.pow(radarX - centerX, 2) + Math.pow(radarY - centerY, 2)
+      );
+
+      if (distanceToCenter <= 100) {
+        this.radarContext.beginPath();
+        this.radarContext.arc(radarX, radarY, 4, 0, Math.PI * 2);
+        this.radarContext.fillStyle = `rgba(255, 255, 0, ${blinkIntensity})`;
+        this.radarContext.fill();
+
+        const triangleSize = 8 + blinkIntensity * 3;
+        this.radarContext.beginPath();
+        this.radarContext.moveTo(radarX, radarY - triangleSize);
+        this.radarContext.lineTo(
+          radarX - triangleSize / 2,
+          radarY + triangleSize / 2
+        );
+        this.radarContext.lineTo(
+          radarX + triangleSize / 2,
+          radarY + triangleSize / 2
+        );
+        this.radarContext.closePath();
+        this.radarContext.strokeStyle = `rgba(255, 255, 0, ${
+          blinkIntensity * 0.7
         })`;
         this.radarContext.stroke();
       }
@@ -180,6 +231,7 @@ export class MinimapSystem {
     this.radarContext.fill();
 
     this.drawMineSignals();
+    this.drawSharkSignals();
 
     this.radarAngle += 0.02;
     if (this.radarAngle > Math.PI * 2) {
@@ -187,7 +239,11 @@ export class MinimapSystem {
     }
   }
 
-  update(boatPosition: THREE.Vector3, obstacles: THREE.Group[]) {
+  update(
+    boatPosition: THREE.Vector3,
+    obstacles: THREE.Group[],
+    sharks: THREE.Object3D[]
+  ) {
     this.minimapCamera.position.set(
       boatPosition.x,
       this.minimapCamera.position.y,
@@ -195,6 +251,7 @@ export class MinimapSystem {
     );
 
     this.updateMinePositions(obstacles);
+    this.updateSharkPositions(sharks);
     this.minimapRenderer.render(this.scene, this.minimapCamera);
     this.drawRadarSweep();
   }
