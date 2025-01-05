@@ -29,6 +29,7 @@
       <div class="menu-items">
         <div class="menu-item" id="resume-button">RESUME</div>
         <div class="menu-item" id="controls-button">CONTROLS</div>
+        <div class="menu-item" id="settings-button">SETTINGS</div>
         <div class="menu-item" id="restart-button">RESTART</div>
         <div class="menu-item" id="quit-button">QUIT</div>
       </div>
@@ -69,6 +70,19 @@
           </div>
         </div>
         <div class="menu-item" id="controls-back">BACK</div>
+      </div>
+      <div id="settings-panel" class="settings-panel hidden">
+        <div class="settings-title">SETTINGS</div>
+        <div class="settings-list">
+          <div class="setting-item">
+            <span class="setting-label">Show Performance Stats</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="stats-toggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="menu-item" id="settings-back">BACK</div>
       </div>
       <div class="pause-status">GAME PAUSED</div>
     </div>

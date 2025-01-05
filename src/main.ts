@@ -1,5 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 import { GLTFLoader, OrbitControls } from "three/examples/jsm/Addons.js";
 import { Audio, AudioLoader } from "three";
 import { SeagullSystem } from "./utils/decorations/seagullSystem";
@@ -51,6 +52,8 @@ controls.update();
 const audioListener = new THREE.AudioListener();
 camera.add(audioListener);
 
+let stats: Stats;
+let showStats = false;
 let previousAnimationFrame: number | null = null;
 let isGameOver = false;
 let isPaused = false;
@@ -254,6 +257,10 @@ function animate(time: number) {
     return;
   }
 
+  if (stats && showStats) {
+    stats.begin();
+  }
+
   const maxFrameTime = 1000 / 30;
   let deltaTime = Math.min(time - lastTime, maxFrameTime) / 1000;
   deltaTime = Math.min(deltaTime, MAX_DELTA_TIME);
@@ -261,10 +268,16 @@ function animate(time: number) {
   lastTime = time;
 
   updateGameState(deltaTime);
-
   renderer.render(scene, camera);
+
+  if (stats && showStats) {
+    stats.end();
+  }
+
   previousAnimationFrame = requestAnimationFrame(animate);
 }
+
+initStats();
 
 function updateGameState(deltaTime: number) {
   if (scoreSystem) {
@@ -535,20 +548,37 @@ function togglePauseUI(isPaused: boolean) {
 const pauseMenuHandlers = {
   controls: () => {
     const controlsPanel = document.getElementById("controls-panel");
+    const settingsPanel = document.getElementById("settings-panel");
     controlsPanel?.classList.remove("hidden");
+    settingsPanel?.classList.add("hidden");
   },
   controlsBack: () => {
     const controlsPanel = document.getElementById("controls-panel");
     controlsPanel?.classList.add("hidden");
+  },
+  settings: () => {
+    const settingsPanel = document.getElementById("settings-panel");
+    const controlsPanel = document.getElementById("controls-panel");
+    settingsPanel?.classList.remove("hidden");
+    controlsPanel?.classList.add("hidden");
+  },
+  settingsBack: () => {
+    const settingsPanel = document.getElementById("settings-panel");
+    settingsPanel?.classList.add("hidden");
   },
 };
 
 function setupPauseMenuListeners() {
   const resumeButton = document.getElementById("resume-button");
   const controlsButton = document.getElementById("controls-button");
+  const settingsButton = document.getElementById("settings-button");
   const controlsBackButton = document.getElementById("controls-back");
+  const settingsBackButton = document.getElementById("settings-back");
   const restartButton = document.getElementById("restart-button");
   const quitButton = document.getElementById("quit-button");
+  const statsToggle = document.getElementById(
+    "stats-toggle"
+  ) as HTMLInputElement;
 
   if (resumeButton) {
     resumeButton.addEventListener("click", handleResume);
@@ -556,10 +586,19 @@ function setupPauseMenuListeners() {
   if (controlsButton) {
     controlsButton.addEventListener("click", pauseMenuHandlers.controls);
   }
+  if (settingsButton) {
+    settingsButton.addEventListener("click", pauseMenuHandlers.settings);
+  }
   if (controlsBackButton) {
     controlsBackButton.addEventListener(
       "click",
       pauseMenuHandlers.controlsBack
+    );
+  }
+  if (settingsBackButton) {
+    settingsBackButton.addEventListener(
+      "click",
+      pauseMenuHandlers.settingsBack
     );
   }
   if (restartButton) {
@@ -568,12 +607,24 @@ function setupPauseMenuListeners() {
   if (quitButton) {
     quitButton.addEventListener("click", handleQuit);
   }
+  if (statsToggle) {
+    statsToggle.checked = showStats;
+    statsToggle.addEventListener("change", (e) => {
+      showStats = (e.target as HTMLInputElement).checked;
+      const container = document.getElementById("stats-container");
+      if (container) {
+        container.style.display = showStats ? "block" : "none";
+      }
+    });
+  }
 }
 
 function removePauseMenuListeners() {
   const resumeButton = document.getElementById("resume-button");
   const controlsButton = document.getElementById("controls-button");
+  const settingsButton = document.getElementById("settings-button");
   const controlsBackButton = document.getElementById("controls-back");
+  const settingsBackButton = document.getElementById("settings-back");
   const restartButton = document.getElementById("restart-button");
   const quitButton = document.getElementById("quit-button");
 
@@ -583,10 +634,19 @@ function removePauseMenuListeners() {
   if (controlsButton) {
     controlsButton.removeEventListener("click", pauseMenuHandlers.controls);
   }
+  if (settingsButton) {
+    settingsButton.removeEventListener("click", pauseMenuHandlers.settings);
+  }
   if (controlsBackButton) {
     controlsBackButton.removeEventListener(
       "click",
       pauseMenuHandlers.controlsBack
+    );
+  }
+  if (settingsBackButton) {
+    settingsBackButton.removeEventListener(
+      "click",
+      pauseMenuHandlers.settingsBack
     );
   }
   if (restartButton) {
@@ -790,6 +850,15 @@ function handleGameOver(reason = "default") {
   }
 
   gameOverOverlay.classList.remove("hidden");
+}
+
+function initStats() {
+  stats = new Stats();
+  const container = document.createElement("div");
+  container.id = "stats-container";
+  container.style.display = "none";
+  container.appendChild(stats.dom);
+  document.body.appendChild(container);
 }
 
 function handleResize() {

@@ -367,6 +367,99 @@ body {
   margin-left: 20px;
 }
 
+.settings-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 1);
+  padding: 40px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-panel.hidden {
+  display: none;
+}
+
+.settings-title {
+  font-size: 32px;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+}
+
+.setting-label {
+  flex-grow: 1;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 91px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
+  transition: .4s;
+  border: none;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 40px;
+  left: 4px;
+  bottom: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: .4s;
+  border-radius: 2px;
+}
+
+input:checked+.toggle-slider:before {
+  transform: translateX(52px);
+  background-color: #ffffff;
+}
+
+#stats-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
 @keyframes scanline {
   0% {
     background-position: 0 0;
