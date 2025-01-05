@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ScoreSystem } from "../progression/scoringSystem";
+import { ImprovedNoise } from "three/examples/jsm/Addons.js";
 import { healthSystem } from "../../main";
 
 abstract class BaseObstacle {
@@ -168,7 +169,7 @@ class MineObstacle extends BaseObstacle {
 
 class IcebergObstacle extends BaseObstacle {
   protected createMesh(): void {
-    const geometry = new THREE.IcosahedronGeometry(12, 1);
+    const geometry = new THREE.IcosahedronGeometry(12, 2);
     const material = new THREE.MeshStandardMaterial({
       color: 0xc0e8ff,
       metalness: 0.1,
@@ -180,16 +181,24 @@ class IcebergObstacle extends BaseObstacle {
     const iceberg = new THREE.Mesh(geometry, material);
 
     const positions = geometry.attributes.position;
+    const noise = new ImprovedNoise();
+    const noiseScale = 0.5;
+
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i);
       const y = positions.getY(i);
       const z = positions.getZ(i);
 
+      const noiseValue = noise.noise(
+        x * noiseScale,
+        y * noiseScale,
+        z * noiseScale
+      );
       positions.setXYZ(
         i,
-        x * (0.9 + Math.random() * 0.2),
-        y * (0.9 + Math.random() * 0.2),
-        z * (0.9 + Math.random() * 0.2)
+        x + noiseValue * 2,
+        y + noiseValue * 2,
+        z + noiseValue * 2
       );
     }
 
