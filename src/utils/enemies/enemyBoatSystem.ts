@@ -609,6 +609,12 @@ export class EnemyBoatSystem {
 
     return { collisionOccurred, currentSpeed };
   }
+  public getPosition(): THREE.Vector3 | null {
+    if (this.enemyBoat && !this.isDestroyed) {
+      return this.enemyBoat.position.clone();
+    }
+    return null;
+  }
   public cleanup() {
     this.fireParticles.forEach((particles) => this.scene.remove(particles));
     this.smokeParticles.forEach((particles) => this.scene.remove(particles));

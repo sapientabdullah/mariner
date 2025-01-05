@@ -358,7 +358,8 @@ function updateGameState(deltaTime: number) {
     minimapSystem.update(
       boat.position,
       obstacleSystem.getObstacles(),
-      sharkSystem.getSharks()
+      sharkSystem.getSharks(),
+      enemyBoatSystem.getPosition()
     );
 
     speedometer.update(currentSpeed);
