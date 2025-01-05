@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { createMuzzleFlash } from "./createMuzzleFlash";
+import { createMuzzleFlash } from "./effects/createMuzzleFlash";
 import { ObstacleSystem } from "./obstacleSystem";
 import { EnemyBoatSystem } from "./enemyBoatSystem";
-import { SmokeSystem } from "./smokeSystem";
+import { SmokeSystem } from "./effects/smokeSystem";
 
 export class BulletSystem {
   private scene: THREE.Scene;

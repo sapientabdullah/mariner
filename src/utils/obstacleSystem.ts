@@ -208,6 +208,7 @@ export class ObstacleSystem {
   private readonly MAX_HITS_TO_DESTROY = 7;
   private scene: THREE.Scene;
   private collisionSound: THREE.Audio | null = null;
+  private explosionSound: THREE.Audio | null = null;
   private textureLoader: THREE.TextureLoader;
   private explosionTexture: THREE.Texture;
   private scoreSystem: ScoreSystem;
@@ -237,6 +238,14 @@ export class ObstacleSystem {
       collisionSound.setBuffer(buffer);
       collisionSound.setVolume(0.5);
       this.collisionSound = collisionSound;
+
+      const explosionSound = new THREE.Audio(listener);
+      const explosionBuffer = await audioLoader.loadAsync(
+        "/audio/mine-explosion.mp3"
+      );
+      explosionSound.setBuffer(explosionBuffer);
+      explosionSound.setVolume(0.7);
+      this.explosionSound = explosionSound;
     } catch (error) {
       console.error("Error loading collision sound:", error);
     }
@@ -366,6 +375,9 @@ export class ObstacleSystem {
       this.scoreSystem.addEnemyKillScore(obstacle.position);
       if (obstacle.userData.type === "MineObstacle") {
         this.createExplosionEffect(obstacle.position);
+        if (this.explosionSound && !this.explosionSound.isPlaying) {
+          this.explosionSound.play();
+        }
       }
       this.scene.remove(obstacle);
       this.obstacles.splice(index, 1);
@@ -534,6 +546,10 @@ export class ObstacleSystem {
     if (this.collisionSound) {
       this.collisionSound.disconnect();
       this.collisionSound = null;
+    }
+    if (this.explosionSound) {
+      this.explosionSound.disconnect();
+      this.explosionSound = null;
     }
   }
 }

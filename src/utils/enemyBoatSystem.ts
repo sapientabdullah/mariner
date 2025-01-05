@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
-import { WaterSplashSystem } from "./splashSystem";
+import { WaterSplashSystem } from "./effects/splashSystem";
 import { loadingManager } from "./managers/loadingManager";
 
 export class EnemyBoatSystem {
