@@ -59,6 +59,9 @@ let isGameOver = false;
 let isPaused = false;
 let userPaused = false;
 let isAnimating = false;
+let mixer: THREE.AnimationMixer;
+let turretAnimations: THREE.AnimationClip[];
+export let currentTurretAction: THREE.AnimationAction | null = null;
 
 const loader = new GLTFLoader(loadingManager);
 export let boat: THREE.Object3D;
@@ -160,11 +163,21 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
 
 function createTurret() {
   const turretLoader = new GLTFLoader(loadingManager);
-  turretLoader.load("/models/turret/scene.gltf", (gltf) => {
+  turretLoader.load("/models/minigun.glb", (gltf) => {
     turret = gltf.scene;
-    turret.scale.set(0.1, 0.1, 0.1);
+    turret.scale.set(4, 4, 4);
     turret.rotation.set(0, Math.PI / 2, 0);
-    turret.position.set(0, 0, -3);
+    turret.position.set(0, 2, -3);
+
+    mixer = new THREE.AnimationMixer(turret);
+    turretAnimations = gltf.animations;
+
+    if (turretAnimations.length > 0) {
+      currentTurretAction = mixer.clipAction(turretAnimations[0]);
+      currentTurretAction.setLoop(THREE.LoopOnce, 1);
+      currentTurretAction.clampWhenFinished = true;
+      currentTurretAction.setEffectiveTimeScale(1);
+    }
 
     turret.traverse((node) => {
       if ((node as THREE.Mesh).isMesh) {
@@ -280,6 +293,10 @@ function animate(time: number) {
 initStats();
 
 function updateGameState(deltaTime: number) {
+  if (mixer) {
+    mixer.update(deltaTime);
+  }
+
   if (scoreSystem) {
     scoreSystem.update(deltaTime);
   }

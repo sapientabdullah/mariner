@@ -3,6 +3,7 @@ import { createMuzzleFlash } from "../effects/createMuzzleFlash";
 import { ObstacleSystem } from "../enemies/obstacleSystem";
 import { EnemyBoatSystem } from "../enemies/enemyBoatSystem";
 import { SmokeSystem } from "../effects/smokeSystem";
+import { currentTurretAction } from "../../main";
 
 export class BulletSystem {
   private scene: THREE.Scene;
@@ -40,9 +41,9 @@ export class BulletSystem {
     this.smokeSystem = new SmokeSystem(scene, camera);
     this.bulletGeometry = new THREE.SphereGeometry(this.BULLET_SIZE);
     this.bulletMaterial = new THREE.MeshStandardMaterial({
-      color: 0xff3300, // Bright orange-red
+      color: 0xff3300,
       emissive: 0xff2200,
-      emissiveIntensity: 2.5, // Increased glow
+      emissiveIntensity: 2.5,
       metalness: 0.9,
       roughness: 0.1,
     });
@@ -87,6 +88,11 @@ export class BulletSystem {
 
   createBullet(turret: THREE.Object3D) {
     if (!turret || !this.canFire()) return;
+
+    if (currentTurretAction && !currentTurretAction.isRunning()) {
+      currentTurretAction.reset();
+      currentTurretAction.play();
+    }
 
     const bullet = new THREE.Mesh(this.bulletGeometry, this.bulletMaterial);
     const trail = this.createBulletTrail();
