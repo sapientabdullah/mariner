@@ -15,14 +15,14 @@ export class BulletSystem {
   private splashTexture: THREE.Texture;
   private smokeSystem: SmokeSystem;
 
-  private readonly BULLET_SPEED = 500;
-  private readonly BULLET_SIZE = 0.5;
-  private readonly FIRE_RATE = 0.1;
-  private readonly BULLET_LIFETIME = 3;
-  private readonly MUZZLE_OFFSET = 50;
-  private readonly BULLET_TRAIL_LENGTH = 10;
+  private readonly BULLET_SPEED = 1000;
+  private readonly BULLET_SIZE = 0.2;
+  private readonly FIRE_RATE = 0.02;
+  private readonly BULLET_LIFETIME = 1.5;
+  private readonly MUZZLE_OFFSET = 30;
+  private readonly BULLET_TRAIL_LENGTH = 15;
   private readonly GRAVITY = -9.81;
-  private readonly GUNSHOT_POOL_SIZE = 5;
+  private readonly GUNSHOT_POOL_SIZE = 8;
 
   private readonly bulletGeometry: THREE.SphereGeometry;
   private readonly bulletMaterial: THREE.MeshStandardMaterial;
@@ -40,10 +40,11 @@ export class BulletSystem {
     this.smokeSystem = new SmokeSystem(scene, camera);
     this.bulletGeometry = new THREE.SphereGeometry(this.BULLET_SIZE);
     this.bulletMaterial = new THREE.MeshStandardMaterial({
-      color: 0xff7700,
-      emissive: 0xff4400,
-      metalness: 0.8,
-      roughness: 0.2,
+      color: 0xff3300, // Bright orange-red
+      emissive: 0xff2200,
+      emissiveIntensity: 2.5, // Increased glow
+      metalness: 0.9,
+      roughness: 0.1,
     });
     this.trailMaterial = new THREE.MeshBasicMaterial({
       color: 0xff4400,
@@ -116,12 +117,30 @@ export class BulletSystem {
   }
 
   private createBulletTrail() {
-    const trailGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2);
     const trail = new THREE.Group();
 
     for (let i = 0; i < this.BULLET_TRAIL_LENGTH; i++) {
+      const radius = 0.15 * (1 - i / this.BULLET_TRAIL_LENGTH);
+      const trailGeometry = new THREE.CylinderGeometry(
+        radius,
+        radius * 0.7,
+        2,
+        8,
+        1
+      );
+
       const segment = new THREE.Mesh(trailGeometry, this.trailMaterial.clone());
-      segment.material.opacity = 1 - i / this.BULLET_TRAIL_LENGTH;
+
+      segment.material.opacity = Math.pow(
+        1 - i / this.BULLET_TRAIL_LENGTH,
+        1.5
+      );
+
+      segment.position.x += (Math.random() - 0.5) * 0.1;
+      segment.position.y += (Math.random() - 0.5) * 0.1;
+
+      segment.rotateZ(Math.PI / 2);
+
       trail.add(segment);
     }
 
@@ -134,10 +153,10 @@ export class BulletSystem {
 
     setTimeout(() => {
       flashMesh.material.opacity = 0;
-    }, 50);
+    }, 30);
     setTimeout(() => {
       this.scene.remove(flashMesh);
-    }, 100);
+    }, 50);
   }
 
   private playGunSound() {
@@ -208,11 +227,19 @@ export class BulletSystem {
         const end = bullet.userData.positions[i + 1];
 
         segment.position.copy(start);
-        segment.lookAt(end);
-        segment.rotateX(Math.PI / 2);
 
+        const direction = end.clone().sub(start).normalize();
+
+        const quaternion = new THREE.Quaternion();
+        const up = new THREE.Vector3(0, 1, 0);
+        quaternion.setFromUnitVectors(up, direction);
+        segment.setRotationFromQuaternion(quaternion);
+
+        segment.rotateOnAxis(direction, Math.PI / 2);
+
+        const baseOpacity = 1 - Math.pow(i / this.BULLET_TRAIL_LENGTH, 1.5);
         ((segment as THREE.Mesh).material as THREE.Material).opacity =
-          1 - i / this.BULLET_TRAIL_LENGTH;
+          baseOpacity * (0.9 + Math.random() * 0.2);
       }
     });
   }
