@@ -23,6 +23,7 @@ import { BulletSystem } from "./utils/weapons/bulletSystem";
 import { loadingManager } from "./utils/managers/loadingManager";
 import { ScoreSystem } from "./utils/progression/scoringSystem";
 import { SubmarineSystem } from "./utils/enemies/submarineSystem";
+import { RearViewMirrorSystem } from "./utils/ui/rearMirrorSystem";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -98,7 +99,9 @@ const skySystem = new SkySystem(scene, renderer, oceanSystem.water);
 const staticObjectSystem = new StaticObjectSystem(scene);
 const seagullSystem = new SeagullSystem(scene, audioListener);
 const waterSplashSystem = new WaterSplashSystem(scene);
+let rearViewMirror: RearViewMirrorSystem;
 let obstacleSystem: ObstacleSystem;
+let bulletSystem: BulletSystem;
 let bombSystem: BombSystem;
 let sharkSystem: SharkSystem;
 let waterSpoutSystem: WaterSpoutSystem;
@@ -106,7 +109,6 @@ let checkpointSystem: CheckpointSystem;
 let enemyBoatSystem: EnemyBoatSystem;
 let submarineSystem: SubmarineSystem;
 export let healthSystem: HealthSystem;
-let bulletSystem: BulletSystem;
 
 const keysPressed: { [key: string]: boolean } = {};
 
@@ -128,6 +130,7 @@ export function startGame() {
 
 loader.load("/models/boat/scene.gltf", (gltf) => {
   boat = gltf.scene;
+  rearViewMirror = new RearViewMirrorSystem(boat);
   boat.scale.set(10, 10, 10);
   boat.position.set(100, 5, 0);
   boat.rotation.set(0, Math.PI, 0);
@@ -308,6 +311,10 @@ function animate(time: number) {
   updateGameState(deltaTime);
   renderer.render(scene, camera);
 
+  if (rearViewMirror && !isPaused) {
+    rearViewMirror.render(renderer, scene);
+  }
+
   if (stats && showStats) {
     stats.end();
   }
@@ -320,6 +327,10 @@ initStats();
 function updateGameState(deltaTime: number) {
   if (mixer) {
     mixer.update(deltaTime);
+  }
+
+  if (rearViewMirror) {
+    rearViewMirror.update();
   }
 
   if (scoreSystem) {
@@ -908,6 +919,10 @@ function handleResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+
+  if (rearViewMirror) {
+    rearViewMirror.handleResize();
+  }
 }
 
 function cleanup() {
