@@ -132,7 +132,7 @@ export class SpeedometerSystem {
         font-size: 14px;
         font-weight: normal;
     `;
-    unitsLabel.textContent = "KTS";
+    unitsLabel.textContent = "kts";
     this.speedElement.appendChild(unitsLabel);
 
     this.speedElement.appendChild(this.dialElement);

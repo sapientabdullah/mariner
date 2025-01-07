@@ -22,6 +22,7 @@ import { BombSystem } from "./utils/weapons/bombSystem";
 import { BulletSystem } from "./utils/weapons/bulletSystem";
 import { loadingManager } from "./utils/managers/loadingManager";
 import { ScoreSystem } from "./utils/progression/scoringSystem";
+import { TachometerSystem } from "./utils/ui/tachometerSystem";
 import { SubmarineSystem } from "./utils/enemies/submarineSystem";
 import { RearViewMirrorSystem } from "./utils/ui/rearMirrorSystem";
 
@@ -99,6 +100,7 @@ const skySystem = new SkySystem(scene, renderer, oceanSystem.water);
 const staticObjectSystem = new StaticObjectSystem(scene);
 const seagullSystem = new SeagullSystem(scene, audioListener);
 const waterSplashSystem = new WaterSplashSystem(scene);
+let tachometer: TachometerSystem;
 let rearViewMirror: RearViewMirrorSystem;
 let obstacleSystem: ObstacleSystem;
 let bulletSystem: BulletSystem;
@@ -130,6 +132,7 @@ export function startGame() {
 
 loader.load("/models/boat/scene.gltf", (gltf) => {
   boat = gltf.scene;
+  tachometer = new TachometerSystem(7000);
   rearViewMirror = new RearViewMirrorSystem(boat);
   boat.scale.set(10, 10, 10);
   boat.position.set(100, 5, 0);
@@ -416,6 +419,7 @@ function updateGameState(deltaTime: number) {
     );
 
     speedometer.update(currentSpeed);
+    tachometer.update(currentSpeed);
     updateCompass(checkpointSystem);
     oceanSystem.updateWaterPosition(boat.position);
 
@@ -935,6 +939,7 @@ function cleanup() {
   removePauseMenuListeners();
   bulletSystem?.cleanup();
   bombSystem?.cleanup();
+  tachometer?.cleanup();
   renderer.domElement.style.cursor = "auto";
 }
 
