@@ -15,7 +15,7 @@ export class RearViewMirrorSystem {
       75,
       this.mirrorWidth / this.mirrorHeight,
       1,
-      20000
+      65000
     );
   }
 
