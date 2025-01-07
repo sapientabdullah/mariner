@@ -4,9 +4,11 @@ export class SpeedometerSystem {
   private needleElement!: HTMLDivElement;
   private speedTextElement!: HTMLDivElement;
   private maxSpeed: number;
+  private markings: HTMLDivElement[];
 
   constructor(maxSpeed: number) {
     this.maxSpeed = maxSpeed;
+    this.markings = [];
     this.createSpeedometerHTML();
   }
 
@@ -167,14 +169,14 @@ export class SpeedometerSystem {
             width: ${i % 3 === 0 ? "3px" : "1.5px"};
             height: ${i % 3 === 0 ? "18px" : "12px"};
             background: linear-gradient(to bottom,
-                rgba(255, 255, 255, 1) 0%,
-                rgba(255, 255, 255, 0.8) 100%
+                rgba(255, 255, 255, 1) 0%, 
+                rgba(200, 200, 200, 0.8) 100% 
             );
             left: 50%;
             bottom: 50%;
             transform-origin: bottom center;
             transform: translateX(-50%) rotate(${rotation}deg) translateY(-80px);
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); 
         `;
 
       if (i % 3 === 0) {
@@ -196,6 +198,7 @@ export class SpeedometerSystem {
         marking.appendChild(label);
       }
 
+      this.markings.push(marking);
       this.dialElement.appendChild(marking);
     }
   }
@@ -205,6 +208,18 @@ export class SpeedometerSystem {
     const rotation = -120 + speedRatio * 240;
 
     this.needleElement.style.transform = `rotate(${rotation}deg)`;
+
+    const activeMarkingIndex = Math.floor((rotation + 120) / 20);
+
+    this.markings.forEach((marking, index) => {
+      if (index <= activeMarkingIndex) {
+        marking.style.background = `linear-gradient(to bottom, rgba(255, 100, 100, 1) 0%, rgba(200, 50, 50, 0.8) 100%)`;
+        marking.style.boxShadow = `0 0 5px rgba(255, 100, 100, 0.5)`;
+      } else {
+        marking.style.background = `linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(200, 200, 200, 0.8) 100%)`;
+        marking.style.boxShadow = `0 0 5px rgba(255, 255, 255, 0.3)`;
+      }
+    });
 
     const speedValue = Math.abs(Math.round(currentSpeed * 10));
     if (this.speedTextElement.textContent !== `${speedValue}`) {

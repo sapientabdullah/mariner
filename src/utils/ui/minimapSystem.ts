@@ -264,7 +264,10 @@ export class MinimapSystem {
   }
 
   private drawRadarSweep() {
+    const noise = this.createNoise(200, 200);
+
     this.radarContext.clearRect(0, 0, 200, 200);
+    this.radarContext.globalCompositeOperation = "source-over";
 
     const gradient = this.radarContext.createConicGradient(
       this.radarAngle,
@@ -272,13 +275,18 @@ export class MinimapSystem {
       100
     );
     gradient.addColorStop(0, "rgba(48, 191, 48, 0.2)");
-    gradient.addColorStop(0.5, "rgba(48, 191, 48, 0)");
+    gradient.addColorStop(0.8, "rgba(48, 191, 48, 0.1)");
     gradient.addColorStop(1, "rgba(48, 191, 48, 0)");
 
     this.radarContext.beginPath();
     this.radarContext.arc(100, 100, 100, 0, Math.PI * 2);
     this.radarContext.fillStyle = gradient;
     this.radarContext.fill();
+
+    this.radarContext.globalCompositeOperation = "destination-in";
+    this.radarContext.drawImage(noise, 0, 0);
+
+    this.radarContext.globalCompositeOperation = "source-over";
 
     this.drawMineSignals();
     this.drawSharkSignals();
@@ -288,6 +296,27 @@ export class MinimapSystem {
     if (this.radarAngle > Math.PI * 2) {
       this.radarAngle = 0;
     }
+  }
+
+  private createNoise(width: number, height: number): HTMLCanvasElement {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d")!;
+
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const value = Math.random() * 255;
+      data[i] = value;
+      data[i + 1] = value;
+      data[i + 2] = value;
+      data[i + 3] = value;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
   }
 
   update(
