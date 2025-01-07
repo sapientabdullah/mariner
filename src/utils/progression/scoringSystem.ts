@@ -25,10 +25,114 @@ export class ScoreSystem {
     this.scene = scene;
   }
 
+  private drawIcon(
+    context: CanvasRenderingContext2D,
+    type: string,
+    x: number,
+    y: number,
+    color: string,
+    size: number = 40
+  ) {
+    context.strokeStyle = "#000000";
+    context.lineWidth = 3;
+    context.fillStyle = color;
+
+    context.shadowColor = color;
+    context.shadowBlur = 8;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+
+    switch (type) {
+      case "checkpoint":
+        context.beginPath();
+        context.moveTo(x, y + size);
+        context.lineTo(x, y);
+
+        context.bezierCurveTo(
+          x + size * 0.4,
+          y + size * 0.1,
+          x + size * 0.4,
+          y + size * 0.4,
+          x + size * 0.8,
+          y + size * 0.3
+        );
+        context.lineTo(x, y + size * 0.6);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        break;
+
+      case "enemy":
+        context.beginPath();
+        context.arc(x + size / 2, y + size / 2, size / 3, 0, Math.PI * 2);
+        context.stroke();
+
+        context.beginPath();
+        context.rect(x + size * 0.45, y + size * 0.2, size * 0.1, size * 0.6);
+        context.fill();
+        context.stroke();
+
+        context.beginPath();
+        context.rect(x + size * 0.2, y + size * 0.45, size * 0.6, size * 0.1);
+        context.fill();
+        context.stroke();
+        break;
+
+      case "shark":
+        context.beginPath();
+        context.moveTo(x, y + size);
+        context.quadraticCurveTo(
+          x + size * 0.5,
+          y + size * 0.2,
+          x + size,
+          y + size
+        );
+        context.moveTo(x + size * 0.3, y + size * 0.7);
+        context.quadraticCurveTo(
+          x + size * 0.5,
+          y + size * 0.4,
+          x + size * 0.7,
+          y + size * 0.7
+        );
+        context.fill();
+        context.stroke();
+        break;
+
+      case "timeBonus":
+        context.beginPath();
+        context.arc(x + size / 2, y + size / 2, size / 2.2, 0, Math.PI * 2);
+        context.stroke();
+
+        for (let i = 0; i < 12; i++) {
+          const angle = (i * Math.PI) / 6;
+          const startRadius = size / 2.5;
+          const endRadius = size / 2.2;
+          const startX = x + size / 2 + Math.sin(angle) * startRadius;
+          const startY = y + size / 2 - Math.cos(angle) * startRadius;
+          const endX = x + size / 2 + Math.sin(angle) * endRadius;
+          const endY = y + size / 2 - Math.cos(angle) * endRadius;
+          context.moveTo(startX, startY);
+          context.lineTo(endX, endY);
+        }
+        context.moveTo(x + size / 2, y + size / 2);
+        context.lineTo(x + size / 2, y + size * 0.3);
+        context.moveTo(x + size / 2, y + size / 2);
+        context.lineTo(x + size * 0.7, y + size / 2);
+        context.stroke();
+        break;
+    }
+
+    context.shadowColor = "transparent";
+    context.shadowBlur = 0;
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
+  }
+
   private createScorePopup(
     text: string,
     position: THREE.Vector3,
-    color: string = "#ffffff"
+    color: string = "#ffffff",
+    type: string = "default"
   ): THREE.Sprite {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -36,17 +140,29 @@ export class ScoreSystem {
     canvas.height = 128;
 
     if (context) {
-      context.fillStyle = color;
       context.font = "bold 48px Jura";
-      context.textAlign = "center";
+      const textMetrics = context.measureText(text);
+      const textWidth = textMetrics.width;
+
+      const totalWidth = textWidth + 60;
+      const startX = (canvas.width - totalWidth) / 2;
+      const iconX = startX;
+      const textX = startX + 60;
+      const centerY = canvas.height / 2;
+
+      this.drawIcon(context, type, iconX, centerY - 20, color);
+
+      context.fillStyle = color;
+      context.textAlign = "left";
       context.strokeStyle = "#000000";
       context.lineWidth = 4;
-      context.strokeText(text, 256, 64);
-      context.fillText(text, 256, 64);
+
+      context.strokeText(text, textX, centerY + 16);
+      context.fillText(text, textX, centerY + 16);
 
       context.shadowColor = color;
       context.shadowBlur = 15;
-      context.fillText(text, 256, 64);
+      context.fillText(text, textX, centerY + 16);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -93,8 +209,7 @@ export class ScoreSystem {
         text = `+${score} ${multiplierText}`;
     }
 
-    const sprite = this.createScorePopup(text, position, color);
-
+    const sprite = this.createScorePopup(text, position, color, type);
     const spread = new THREE.Vector3(
       (Math.random() - 0.5) * 2,
       Math.random() * 2,

@@ -3,10 +3,14 @@ export class ReticleSystem {
   private reticleY: number;
   private reticleElement: SVGElement | null = null;
   private readonly RETICLE_SIZE = 100;
+  private reticleOffsetX: number;
+  private reticleOffsetY: number;
 
-  constructor() {
-    this.reticleX = window.innerWidth / 2;
-    this.reticleY = window.innerHeight / 2;
+  constructor(offsetX = 0, offsetY = 0) {
+    this.reticleOffsetX = offsetX;
+    this.reticleOffsetY = offsetY;
+    this.reticleX = window.innerWidth / 2 + this.reticleOffsetX;
+    this.reticleY = window.innerHeight / 2 + this.reticleOffsetY;
     this.createReticle();
   }
 
@@ -142,8 +146,8 @@ export class ReticleSystem {
   }
 
   public centerReticle(): void {
-    this.reticleX = window.innerWidth / 2;
-    this.reticleY = window.innerHeight / 2;
+    this.reticleX = window.innerWidth / 2 + this.reticleOffsetX;
+    this.reticleY = window.innerHeight / 2 + this.reticleOffsetY;
     if (this.reticleElement) {
       this.reticleElement.style.left = `${this.reticleX}px`;
       this.reticleElement.style.top = `${this.reticleY}px`;

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 class SmokeParticle {
-  mesh: THREE.Mesh;
+  mesh: THREE.Mesh<THREE.BufferGeometry, THREE.Material>;
   velocity: THREE.Vector3;
   life: number;
   maxLife: number;
@@ -68,7 +68,7 @@ export class SmokeSystem {
     const textureLoader = new THREE.TextureLoader();
     this.smokeTexture = textureLoader.load("/textures/smoke.png");
 
-    this.smokeGeometry = new THREE.PlaneGeometry(1, 1);
+    this.smokeGeometry = new THREE.PlaneGeometry(2, 2);
     this.smokeMaterial = new THREE.MeshBasicMaterial({
       map: this.smokeTexture,
       transparent: true,

@@ -89,7 +89,7 @@ let waterSplashSound: Audio;
 let scoreSystem: ScoreSystem;
 scoreSystem = new ScoreSystem(scene);
 
-const reticleSystem = new ReticleSystem();
+const reticleSystem = new ReticleSystem(0, -135);
 reticleSystem.toggleVisibility(false);
 const speedometer = new SpeedometerSystem(MAX_SPEED);
 const minimapSystem = new MinimapSystem(scene);
@@ -167,7 +167,11 @@ function createTurret() {
     turret = gltf.scene;
     turret.scale.set(4, 4, 4);
     turret.rotation.set(0, Math.PI / 2, 0);
-    turret.position.set(0, 2, -3);
+
+    const stand = createTurretStand();
+    stand.position.set(0, 0, -3.6);
+
+    turret.position.set(0, 2.5, -0.5);
 
     mixer = new THREE.AnimationMixer(turret);
     turretAnimations = gltf.animations;
@@ -185,12 +189,33 @@ function createTurret() {
       }
     });
 
-    boat.add(turret);
+    stand.add(turret);
+    boat.add(stand);
   });
+
   if (turret) {
     mouseX = -turret.rotation.y;
     mouseY = turret.rotation.x;
   }
+}
+
+function createTurretStand() {
+  const baseMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc0c0c0,
+    metalness: 0.9,
+    roughness: 0.5,
+  });
+
+  const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 3.5, 16);
+  const pole = new THREE.Mesh(poleGeometry, baseMaterial);
+  pole.position.y = 1.25;
+  pole.castShadow = true;
+  pole.receiveShadow = true;
+
+  const turretStand = new THREE.Group();
+  turretStand.add(pole);
+
+  return turretStand;
 }
 
 function setupBoatSounds() {

@@ -12,6 +12,7 @@ export class CheckpointSystem {
   private readonly CHECKPOINT_RADIUS = 50;
   private readonly CHECKPOINT_SPACING = 500;
   private readonly LINE_HEIGHT = 100;
+  private readonly TEXT_SPACING = 20;
   private readonly TIME_PER_CHECKPOINT = 30;
   private timeRemaining: number;
   private onTimeUp: () => void;
@@ -50,7 +51,7 @@ export class CheckpointSystem {
 
   private createTimeSprite() {
     const sprite = this.createTextSprite("");
-    sprite.position.set(0, this.LINE_HEIGHT + 50, 0);
+    sprite.position.set(0, this.LINE_HEIGHT + this.TEXT_SPACING, 0);
     this.timeSprite = sprite;
     this.scene.add(sprite);
   }
@@ -58,7 +59,7 @@ export class CheckpointSystem {
   private updateTimeSprite() {
     if (!this.timeSprite) return;
 
-    const timeText = `Time: ${Math.ceil(this.timeRemaining)}s`;
+    const timeText = `${Math.ceil(this.timeRemaining)}s`;
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
     canvas.width = 256;
@@ -78,7 +79,7 @@ export class CheckpointSystem {
     if (this.currentCheckpointMesh) {
       const checkpointPosition = this.checkpoints[this.currentCheckpointIndex];
       this.timeSprite.position.copy(checkpointPosition);
-      this.timeSprite.position.y += this.LINE_HEIGHT + 50;
+      this.timeSprite.position.y += this.LINE_HEIGHT + this.TEXT_SPACING;
     }
 
     this.updateCheckpointColors();

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createMuzzleFlash } from "../effects/createMuzzleFlash";
+import { MuzzleFlashSystem } from "../effects/createMuzzleFlash";
 import { ObstacleSystem } from "../enemies/obstacleSystem";
 import { EnemyBoatSystem } from "../enemies/enemyBoatSystem";
 import { SmokeSystem } from "../effects/smokeSystem";
@@ -15,12 +15,13 @@ export class BulletSystem {
   private textureLoader: THREE.TextureLoader;
   private splashTexture: THREE.Texture;
   private smokeSystem: SmokeSystem;
+  private muzzleFlashSystem: MuzzleFlashSystem;
 
   private readonly BULLET_SPEED = 1000;
   private readonly BULLET_SIZE = 0.2;
   private readonly FIRE_RATE = 0.02;
   private readonly BULLET_LIFETIME = 1.5;
-  private readonly MUZZLE_OFFSET = 30;
+  private readonly MUZZLE_OFFSET = 33;
   private readonly BULLET_TRAIL_LENGTH = 15;
   private readonly GRAVITY = -9.81;
   private readonly GUNSHOT_POOL_SIZE = 8;
@@ -39,6 +40,7 @@ export class BulletSystem {
     this.textureLoader = new THREE.TextureLoader();
     this.splashTexture = this.textureLoader.load("/textures/bullet-splash.png");
     this.smokeSystem = new SmokeSystem(scene, camera);
+    this.muzzleFlashSystem = new MuzzleFlashSystem(scene, camera);
     this.bulletGeometry = new THREE.SphereGeometry(this.BULLET_SIZE);
     this.bulletMaterial = new THREE.MeshStandardMaterial({
       color: 0xff3300,
@@ -102,7 +104,7 @@ export class BulletSystem {
     turret.getWorldPosition(turretWorldPos);
 
     const turretQuaternion = turret.getWorldQuaternion(new THREE.Quaternion());
-    const muzzleOffset = new THREE.Vector3(0, 10, this.MUZZLE_OFFSET);
+    const muzzleOffset = new THREE.Vector3(0, 4.5, this.MUZZLE_OFFSET);
     muzzleOffset.applyQuaternion(turretQuaternion);
 
     bullet.position.copy(turretWorldPos).add(muzzleOffset);
@@ -117,8 +119,11 @@ export class BulletSystem {
     this.scene.add(bullet);
     this.bullets.push(bullet);
 
-    this.createMuzzleFlashEffect(turret);
     this.smokeSystem.createSmoke(bullet.position.clone(), direction.clone());
+    this.muzzleFlashSystem.createFlash(
+      bullet.position.clone(),
+      direction.clone()
+    );
     this.playGunSound();
   }
 
@@ -153,18 +158,6 @@ export class BulletSystem {
     return trail;
   }
 
-  private createMuzzleFlashEffect(turret: THREE.Object3D) {
-    const flashMesh = createMuzzleFlash(turret);
-    this.scene.add(flashMesh);
-
-    setTimeout(() => {
-      flashMesh.material.opacity = 0;
-    }, 30);
-    setTimeout(() => {
-      this.scene.remove(flashMesh);
-    }, 50);
-  }
-
   private playGunSound() {
     if (this.gunSoundPool.length > 0) {
       const currentSound = this.gunSoundPool[this.currentGunSoundIndex];
@@ -187,6 +180,7 @@ export class BulletSystem {
     const currentTime = performance.now();
 
     this.smokeSystem.update(deltaTime);
+    this.muzzleFlashSystem.update(deltaTime);
 
     this.bullets = this.bullets.filter((bullet) => {
       bullet.userData.velocity.y += this.GRAVITY * deltaTime;
@@ -251,7 +245,7 @@ export class BulletSystem {
   }
 
   private createBulletSplash(position: THREE.Vector3) {
-    const splashSize = 5;
+    const splashSize = 25;
     const splashGeometry = new THREE.PlaneGeometry(splashSize, splashSize);
     const splashMaterial = new THREE.MeshBasicMaterial({
       map: this.splashTexture,
@@ -265,11 +259,8 @@ export class BulletSystem {
     splash.position.copy(position);
     splash.position.y = this.oceanWaterLevel + 0.1;
 
-    // Faces the camera
-    splash.rotation.x = -Math.PI / 2;
-
     splash.userData.creationTime = performance.now();
-    splash.userData.lifetime = 1.0; // Duration in s
+    splash.userData.lifetime = 1.0;
 
     const animate = () => {
       const age = (performance.now() - splash.userData.creationTime) / 1000;
@@ -280,7 +271,6 @@ export class BulletSystem {
         return;
       }
 
-      // Scale up the splash over time
       const scale = 1 + lifeRatio * 2;
       splash.scale.set(scale, scale, scale);
 
@@ -297,6 +287,7 @@ export class BulletSystem {
 
   cleanup() {
     this.smokeSystem.cleanup();
+    this.muzzleFlashSystem.cleanup();
     this.bullets.forEach((bullet) => this.scene.remove(bullet));
     this.bullets = [];
     this.gunSoundPool.forEach((sound) => {
