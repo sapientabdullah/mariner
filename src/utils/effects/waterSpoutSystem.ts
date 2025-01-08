@@ -19,7 +19,7 @@ export class WaterSpoutSystem {
     this.scene = scene;
     this.boatReference = boatReference;
     const textureLoader = new THREE.TextureLoader();
-    this.spoutTexture = textureLoader.load("/textures/water-spout.webp");
+    this.spoutTexture = textureLoader.load("/textures/water-spout.png");
     this.initializeSounds(camera);
   }
 
@@ -63,7 +63,7 @@ export class WaterSpoutSystem {
     const z = this.boatReference.position.z + Math.sin(angle) * distance;
 
     sprite.position.set(x, 0, z);
-    sprite.scale.set(20, 40, 1);
+    sprite.scale.set(40, 80, 2);
 
     sprite.userData.creationTime = performance.now();
     sprite.userData.initialY = 0;

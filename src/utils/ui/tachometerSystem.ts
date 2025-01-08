@@ -215,23 +215,16 @@ export class TachometerSystem {
     const rpmRatio = oscillatingRPM / this.maxRPM;
     const progressDegrees = Math.min(240 * rpmRatio, 240);
 
-    let color;
+    let gradient;
     if (rpmRatio < 0.6) {
-      color = "#00ffff";
+      gradient = `conic-gradient(from 240deg, #00bfff 0deg, #00ffff ${progressDegrees}deg, transparent ${progressDegrees}deg)`;
     } else if (rpmRatio < 0.8) {
-      color = "#ffff00";
+      gradient = `conic-gradient(from 240deg, #00ffff 0deg, #ffff00 ${progressDegrees}deg, transparent ${progressDegrees}deg)`;
     } else {
-      color = "#ff0000";
+      gradient = `conic-gradient(from 240deg, #ffff00 0deg, #ff4500 ${progressDegrees}deg, transparent ${progressDegrees}deg)`;
     }
 
-    this.progressRing.style.background = `
-    conic-gradient(
-      from 240deg,
-      ${color} 0deg,
-      ${color} ${progressDegrees}deg,
-      transparent ${progressDegrees}deg
-    )
-  `;
+    this.progressRing.style.background = gradient;
   }
 
   cleanup() {

@@ -212,6 +212,24 @@ export class MinimapSystem {
     ctx.moveTo(0, 100);
     ctx.lineTo(200, 100);
     ctx.stroke();
+
+    const radius = 100;
+
+    ctx.strokeStyle = "rgba(48, 191, 48, 0.2)";
+    for (let angle = 0; angle < 360; angle += 10) {
+      if (angle % 30 !== 0) {
+        const radian = (angle - 90) * (Math.PI / 180);
+        const outerX = 100 + (radius - 2) * Math.cos(radian);
+        const outerY = 100 + (radius - 2) * Math.sin(radian);
+        const innerX = 100 + (radius - 5) * Math.cos(radian);
+        const innerY = 100 + (radius - 5) * Math.sin(radian);
+
+        ctx.beginPath();
+        ctx.moveTo(innerX, innerY);
+        ctx.lineTo(outerX, outerY);
+        ctx.stroke();
+      }
+    }
   }
 
   updateEnemyPosition(position: THREE.Vector3 | null) {
