@@ -1,12 +1,12 @@
 export class TachometerSystem {
   private container!: HTMLDivElement;
-  private dialElement!: HTMLDivElement;
+  private displayElement!: HTMLDivElement;
+  private progressRing!: HTMLDivElement;
   private maxRPM: number;
-  private markings: HTMLDivElement[];
+  private markings: HTMLDivElement[] = [];
 
   constructor(maxRPM: number = 7000) {
     this.maxRPM = maxRPM;
-    this.markings = [];
     this.createTachometerHTML();
   }
 
@@ -14,10 +14,11 @@ export class TachometerSystem {
     this.container = document.createElement("div");
     this.container.style.cssText = `
         position: fixed;
-        bottom: 20px;
-        left: 250px;
-        width: 100px; 
+        bottom: 72.5px;
+        left: 193px;
+        width: 100px;
         height: 100px;
+        rotate: 89deg;
         background: linear-gradient(145deg,
             rgba(0, 0, 0, 0.9) 0%,
             rgba(20, 20, 20, 0.9) 50%,
@@ -27,177 +28,210 @@ export class TachometerSystem {
         border: 2px solid #333333;
         box-shadow:
             0 0 10px rgba(0, 0, 0, 0.5),
-            inset 0 0 30px rgba(0, 0, 0, 0.5), 
+            inset 0 0 30px rgba(0, 0, 0, 0.5),
             inset 0 0 5px rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(3px); 
+        backdrop-filter: blur(3px);
+        overflow: hidden;
+        z-index: 50;
     `;
 
-    this.dialElement = document.createElement("div");
-    this.dialElement.style.cssText = `
+    this.displayElement = document.createElement("div");
+    this.displayElement.style.cssText = `
         position: absolute;
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background:
-            radial-gradient(circle at center,
-                rgba(40, 40, 40, 0.6) 0%,
-                rgba(20, 20, 20, 0.8) 80%,
-                rgba(0, 0, 0, 0.8) 100%
-            );
+        background: radial-gradient(circle at center,
+            rgba(40, 40, 40, 0.6) 0%,
+            rgba(20, 20, 20, 0.8) 80%,
+            rgba(0, 0, 0, 0.8) 100%
+        );
+        overflow: hidden;
     `;
 
-    const innerRing = document.createElement("div");
-    innerRing.style.cssText = `
-        position: absolute;
-        width: 85%;
-        height: 85%;
-        left: 7.5%;
-        top: 7.5%;
-        border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.1); 
-    `;
-    this.dialElement.appendChild(innerRing);
-
-    const unitsLabel = document.createElement("div");
-    unitsLabel.style.cssText = `
-        position: absolute;
-        width: 100%;
-        text-align: center;
-        bottom: 17px; 
-        color: rgba(255, 255, 255, 1);
-        font-family: 'Jura', sans-serif;
-        font-size: 7px;
-        font-weight: normal;
-    `;
-    unitsLabel.textContent = "x1000 rpm";
-    this.container.appendChild(unitsLabel);
-
-    this.container.appendChild(this.dialElement);
-    document.body.appendChild(this.container);
-
-    this.createDialMarkings();
-  }
-
-  private createDialMarkings() {
-    const dialBackground = document.createElement("div");
-    dialBackground.style.cssText = `
+    const trackRing = document.createElement("div");
+    trackRing.style.cssText = `
         position: absolute;
         width: 90%;
         height: 90%;
-        left: 5%;
         top: 5%;
+        left: 5%;
         border-radius: 50%;
-        background: linear-gradient(145deg,
-            rgba(0, 0, 0, 0.5) 0%,
-            rgba(40, 40, 40, 0.3) 50%,
-            rgba(0, 0, 0, 0.5) 100%
+        background: conic-gradient(
+            from 210deg,
+            rgba(40, 40, 40, 0.3) 0deg,
+            rgba(40, 40, 40, 0.3) 240deg,
+            rgba(40, 40, 40, 0.1) 240deg
         );
     `;
-    this.dialElement.appendChild(dialBackground);
 
+    this.progressRing = document.createElement("div");
+    this.progressRing.style.cssText = `
+        position: absolute;
+        width: 90%;
+        height: 90%;
+        top: 5%;
+        left: 5%;
+        border-radius: 50%;
+        background: conic-gradient(
+            from 210deg,
+            #00ffff 0deg,
+            #00ffff 0deg,
+            transparent 0deg
+        );
+        transition: background 0.1s ease;
+    `;
+
+    const centerOverlay = document.createElement("div");
+    centerOverlay.style.cssText = `
+        position: absolute;
+        width: 70%;
+        height: 70%;
+        top: 15%;
+        left: 15%;
+        border-radius: 50%;
+        background: radial-gradient(circle at center,
+            rgba(20, 20, 20, 0.9) 0%,
+            rgba(0, 0, 0, 0.95) 100%
+        );
+        z-index: 1;
+    `;
+
+    const cap = document.createElement("div");
+    cap.style.cssText = `
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at center,
+        #ffffff 0%,
+        #dddddd 40%,
+        #999999 100%
+    );
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+`;
+
+    this.container.appendChild(this.displayElement);
+    this.displayElement.appendChild(trackRing);
+    this.displayElement.appendChild(this.progressRing);
+    this.createDialMarkings();
+    this.displayElement.appendChild(centerOverlay);
+    this.displayElement.appendChild(cap);
+    document.body.appendChild(this.container);
+  }
+
+  private createDialMarkings() {
     for (let i = 0; i <= 14; i++) {
       const marking = document.createElement("div");
       const rotation = -120 + (i * 240) / 14;
       const rpmValue = (i * this.maxRPM) / 14;
 
       marking.style.cssText = `
-            position: absolute;
-            width: ${i % 2 === 0 ? "2px" : "1px"};
-            height: ${i % 2 === 0 ? "9px" : "6px"};
-            background: linear-gradient(to bottom,
-                rgba(255, 255, 255, 1) 0%, 
-                rgba(200, 200, 200, 0.8) 100% 
-            );
-            left: 50%;
-            bottom: 50%;
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(${rotation}deg) translateY(-40px); 
-            box-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
-        `;
+        position: absolute;
+        width: ${i % 2 === 0 ? "2px" : "1px"};
+        height: ${i % 2 === 0 ? "8px" : "5px"};
+        background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(200, 200, 200, 0.6) 100%
+        );
+        left: 50%;
+        bottom: 50%;
+        transform-origin: bottom center;
+        transform: translateX(-50%) rotate(${rotation}deg) translateY(-38px);
+        box-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+        z-index: 3;
+      `;
 
       if (i % 2 === 0) {
         const label = document.createElement("div");
         label.style.cssText = `
-                position: absolute;
-                transform: rotate(-${rotation}deg);
-                color: rgba(255, 255, 255, 0.9);
-                font-size: 8px;
-                font-weight: bold;
-                margin-top: -12px;
-                width: 20px;
-                text-align: center;
-                margin-left: -10px;
-                text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-                font-family: 'Jura', sans-serif;
-            `;
+          position: absolute;
+          transform: rotate(-${rotation}deg);
+          color: rgba(255, 255, 255, 0.8);
+          font-family: 'Jura', monospace;
+          font-size: 7px;
+          margin-top: -12px;
+          width: 20px;
+          text-align: center;
+          margin-left: -10px;
+          text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+        `;
         label.textContent = `${Math.round(rpmValue / 1000)}`;
         marking.appendChild(label);
       }
 
       this.markings.push(marking);
-      this.dialElement.appendChild(marking);
+      this.displayElement.appendChild(marking);
 
       if (i < 14) {
         const minorMarking = document.createElement("div");
         const minorRotation = rotation + 240 / 14 / 2;
 
         minorMarking.style.cssText = `
-            position: absolute;
-            width: 1px;
-            height: 4px;
-            background: linear-gradient(to bottom,
-                rgba(255, 255, 255, 0.7) 0%, 
-                rgba(200, 200, 200, 0.5) 100% 
-            );
-            left: 50%;
-            bottom: 50%;
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(${minorRotation}deg) translateY(-40px);
-            box-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+          position: absolute;
+          width: 1px;
+          height: 4px;
+          background: linear-gradient(to bottom,
+              rgba(255, 255, 255, 0.6) 0%,
+              rgba(200, 200, 200, 0.4) 100%
+          );
+          left: 50%;
+          bottom: 50%;
+          transform-origin: bottom center;
+          transform: translateX(-50%) rotate(${minorRotation}deg) translateY(-38px);
+          box-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
+          z-index: 3;
         `;
 
         this.markings.push(minorMarking);
-        this.dialElement.appendChild(minorMarking);
+        this.displayElement.appendChild(minorMarking);
       }
     }
   }
 
   update(currentSpeed: number) {
     const IDLE_RPM = 1000;
+    const TARGET_RPM = 6500;
     const targetRPM = Math.max(
       IDLE_RPM,
       Math.abs(currentSpeed) * (this.maxRPM / 5)
     );
 
     let oscillatingRPM = targetRPM;
-    if (targetRPM >= this.maxRPM * 0.8) {
-      const maxShake = this.maxRPM * 0.2;
+    if (currentSpeed === 0) {
+      oscillatingRPM = IDLE_RPM;
+    } else {
+      oscillatingRPM = Math.min(targetRPM, TARGET_RPM);
+
+      const maxShake = 100;
       const randomShake = Math.random() * maxShake - maxShake / 2;
-      oscillatingRPM += randomShake;
+      oscillatingRPM = Math.max(0, oscillatingRPM + randomShake);
     }
 
     const rpmRatio = oscillatingRPM / this.maxRPM;
-    const rotation = -120 + rpmRatio * 240;
+    const progressDegrees = Math.min(240 * rpmRatio, 240);
 
-    const activeMarkingIndex = Math.floor(
-      (rotation + 120) / (240 / this.markings.length)
-    );
+    let color;
+    if (rpmRatio < 0.6) {
+      color = "#00ffff";
+    } else if (rpmRatio < 0.8) {
+      color = "#ffff00";
+    } else {
+      color = "#ff0000";
+    }
 
-    this.markings.forEach((marking, index) => {
-      if (index <= activeMarkingIndex) {
-        const intensity = Math.min(1, (activeMarkingIndex - index) / 10);
-        marking.style.background = `linear-gradient(to bottom, 
-          rgba(255, ${100 - intensity * 50}, ${100 - intensity * 100}, 1) 0%, 
-          rgba(200, ${50 - intensity * 25}, ${50 - intensity * 50}, 0.8) 100%)`;
-        marking.style.boxShadow = `0 0 3px rgba(255, ${100 - intensity * 50}, ${
-          100 - intensity * 100
-        }, 0.5)`;
-      } else {
-        marking.style.background = `linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(200, 200, 200, 0.8) 100%)`;
-        marking.style.boxShadow = `0 0 3px rgba(255, 255, 255, 0.3)`;
-      }
-    });
+    this.progressRing.style.background = `
+    conic-gradient(
+      from 240deg,
+      ${color} 0deg,
+      ${color} ${progressDegrees}deg,
+      transparent ${progressDegrees}deg
+    )
+  `;
   }
 
   cleanup() {

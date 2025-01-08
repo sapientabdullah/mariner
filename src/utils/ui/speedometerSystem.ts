@@ -32,6 +32,7 @@ export class SpeedometerSystem {
             inset 0 0 60px rgba(0, 0, 0, 0.5),
             inset 0 0 10px rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(5px);
+        z-index: 100;
     `;
 
     this.dialElement = document.createElement("div");
