@@ -80,7 +80,7 @@ export class SmokeSystem {
   }
 
   createSmoke(position: THREE.Vector3, direction: THREE.Vector3) {
-    const particleCount = 5;
+    const particleCount = 2;
     const forwardVector = direction.clone().normalize();
     const upVector = new THREE.Vector3(0, 1, 0);
     const rightVector = new THREE.Vector3()

@@ -25,6 +25,11 @@ export class BulletSystem {
   private readonly BULLET_TRAIL_LENGTH = 15;
   private readonly GRAVITY = -9.81;
   private readonly GUNSHOT_POOL_SIZE = 8;
+  private heat: number = 0;
+  private readonly HEAT_INCREMENT = 20;
+  private readonly COOL_DOWN_RATE = 100;
+  private readonly MAX_HEAT = 10000;
+  private overheating: boolean = false;
 
   private readonly bulletGeometry: THREE.SphereGeometry;
   private readonly bulletMaterial: THREE.MeshStandardMaterial;
@@ -81,6 +86,10 @@ export class BulletSystem {
 
   public canFire(): boolean {
     const currentTime = performance.now();
+    if (this.overheating) {
+      return false;
+    }
+
     if (currentTime - this.lastFireTime > this.FIRE_RATE * 1000) {
       this.lastFireTime = currentTime;
       return true;
@@ -90,6 +99,11 @@ export class BulletSystem {
 
   createBullet(turret: THREE.Object3D) {
     if (!turret || !this.canFire()) return;
+
+    this.heat += this.HEAT_INCREMENT;
+    if (this.heat >= this.MAX_HEAT) {
+      this.overheating = true;
+    }
 
     if (currentTurretAction && !currentTurretAction.isRunning()) {
       currentTurretAction.reset();
@@ -178,6 +192,32 @@ export class BulletSystem {
     enemyBoatSystem: EnemyBoatSystem
   ) {
     const currentTime = performance.now();
+
+    const heatBar = document.getElementById("heat-bar") as HTMLElement;
+
+    if (heatBar) {
+      const heatPercentage = (this.heat / this.MAX_HEAT) * 100;
+      heatBar.style.width = `${heatPercentage}%`;
+
+      if (this.overheating) {
+        heatBar.style.background = "darkred";
+      } else if (this.heat > 75) {
+        heatBar.style.background = "red";
+      } else if (this.heat > 50) {
+        heatBar.style.background = "orange";
+      } else {
+        heatBar.style.background = "green";
+      }
+    }
+
+    if (this.heat > 0) {
+      this.heat -= this.COOL_DOWN_RATE * deltaTime;
+      if (this.heat < 0) this.heat = 0;
+    }
+
+    if (this.overheating && this.heat <= 0) {
+      this.overheating = false;
+    }
 
     this.smokeSystem.update(deltaTime);
     this.muzzleFlashSystem.update(deltaTime);
