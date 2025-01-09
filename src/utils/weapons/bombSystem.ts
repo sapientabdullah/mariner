@@ -20,6 +20,7 @@ export class BombSystem {
   private readonly EXPLOSION_RADIUS = 700;
   private readonly GRAVITY = -9.81;
   private readonly OBSTACLE_DAMAGE = 5;
+  private reloadSpinner: HTMLElement | null = null;
 
   private bombGeometry = new THREE.CylinderGeometry(
     this.BOMB_SIZE,
@@ -49,6 +50,7 @@ export class BombSystem {
     this.explosionTexture = textureLoader.load("/textures/bomb-explosion.png");
     this.splashTexture = textureLoader.load("/textures/bullet-splash.png");
     this.initializeSounds(camera);
+    this.reloadSpinner = document.getElementById("reload-spinner");
   }
 
   private async initializeSounds(camera: THREE.Camera) {
@@ -73,6 +75,18 @@ export class BombSystem {
       this.firingSound = firingSound;
     } catch (error) {
       console.error("Error loading sounds:", error);
+    }
+  }
+
+  private showReloadSpinner() {
+    if (this.reloadSpinner) {
+      this.reloadSpinner.style.display = "block";
+    }
+  }
+
+  private hideReloadSpinner() {
+    if (this.reloadSpinner) {
+      this.reloadSpinner.style.display = "none";
     }
   }
 
@@ -109,7 +123,13 @@ export class BombSystem {
 
   createBomb(turret: THREE.Object3D) {
     const currentTime = performance.now();
-    if (currentTime - this.lastBombTime < this.BOMB_COOLDOWN) return;
+
+    if (currentTime - this.lastBombTime < this.BOMB_COOLDOWN) {
+      this.showReloadSpinner();
+      return;
+    }
+
+    this.hideReloadSpinner();
 
     const bomb = new THREE.Mesh(this.bombGeometry, this.bombMaterial);
 
@@ -226,6 +246,14 @@ export class BombSystem {
   }
 
   update(deltaTime: number, waterLevel: number) {
+    const currentTime = performance.now();
+    if (
+      this.reloadSpinner &&
+      this.reloadSpinner.style.display === "block" &&
+      currentTime - this.lastBombTime >= this.BOMB_COOLDOWN
+    ) {
+      this.hideReloadSpinner();
+    }
     this.bombs = this.bombs.filter((bomb) => {
       bomb.userData.velocity.y += this.GRAVITY * deltaTime;
       const movement = bomb.userData.velocity.clone().multiplyScalar(deltaTime);

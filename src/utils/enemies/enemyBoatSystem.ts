@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import { WaterSplashSystem } from "../effects/splashSystem";
 import { loadingManager } from "../managers/loadingManager";
+import { healthSystem } from "../../main";
 
 export class EnemyBoatSystem {
   private enemyBoat: THREE.Object3D | null = null;
@@ -15,13 +16,14 @@ export class EnemyBoatSystem {
   private camera: THREE.Camera;
   private bullets: THREE.Mesh[] = [];
   private cannonSound: THREE.Audio | null = null;
-  private readonly SHOOTING_RANGE = 800;
+  private readonly SHOOTING_RANGE = 1500;
   private readonly SHOOTING_INTERVAL = 1;
   private readonly ENEMY_SPEED = 20;
   private readonly ENEMY_ROTATION_SPEED = 0.02;
   private readonly DAMAGE_THRESHOLD = 30;
   private readonly BULLET_COLLISION_RADIUS = 50;
-  private readonly MIN_DISTANCE = 300;
+  private readonly MIN_DISTANCE = 600;
+  private readonly FIRING_ANGLE_THRESHOLD = 0.3;
 
   private lastShotTime = 0;
   private maxHealth = 100;
@@ -45,6 +47,21 @@ export class EnemyBoatSystem {
     this.createEnemyBoat();
   }
 
+  private isBoatFacingPlayer(): boolean {
+    if (!this.enemyBoat) return false;
+
+    const enemyForward = new THREE.Vector3(0, 0, 1);
+    enemyForward.applyQuaternion(this.enemyBoat.quaternion);
+
+    const directionToPlayer = new THREE.Vector3()
+      .subVectors(this.playerBoat.position, this.enemyBoat.position)
+      .normalize();
+
+    const angleToPlayer = enemyForward.angleTo(directionToPlayer);
+
+    return angleToPlayer <= this.FIRING_ANGLE_THRESHOLD;
+  }
+
   private createBullet(
     position: THREE.Vector3,
     direction: THREE.Vector3
@@ -58,8 +75,15 @@ export class EnemyBoatSystem {
     const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
     bullet.position.copy(position);
-    bullet.userData.direction = direction;
-    bullet.userData.speed = 100; // Bullet speed
+
+    const downwardDirection = new THREE.Vector3(
+      direction.x,
+      -0.06, // -1 = straight down, 0 = horizontal
+      direction.z
+    ).normalize();
+
+    bullet.userData.direction = downwardDirection;
+    bullet.userData.speed = 1000; // Bullet speed
     bullet.userData.creationTime = performance.now();
     bullet.userData.maxLifetime = 3000; // Bullet disappears after 3 seconds
 
@@ -72,8 +96,10 @@ export class EnemyBoatSystem {
     const currentTime = performance.now();
     if (currentTime - this.lastShotTime < this.SHOOTING_INTERVAL) return;
 
-    const leftCannonOffset = new THREE.Vector3(-20, 20, 0);
-    const rightCannonOffset = new THREE.Vector3(20, 20, 0);
+    if (!this.isBoatFacingPlayer()) return;
+
+    const leftCannonOffset = new THREE.Vector3(-20, 100, 0);
+    const rightCannonOffset = new THREE.Vector3(20, 100, 0);
     leftCannonOffset.applyQuaternion(this.enemyBoat.quaternion);
     rightCannonOffset.applyQuaternion(this.enemyBoat.quaternion);
 
@@ -169,6 +195,8 @@ export class EnemyBoatSystem {
       if (distanceToPlayer < this.BULLET_COLLISION_RADIUS) {
         bulletsToRemove.push(bullet);
         this.createBulletHitEffect(bullet.position);
+
+        healthSystem.takeDamage(10);
       }
     });
 
@@ -404,6 +432,9 @@ export class EnemyBoatSystem {
 
     this.isDestroyed = true;
 
+    this.bullets.forEach((bullet) => this.scene.remove(bullet));
+    this.bullets = [];
+
     if (this.explosionSound && !this.explosionSound.isPlaying) {
       this.explosionSound.play();
     }
@@ -431,7 +462,7 @@ export class EnemyBoatSystem {
     fireGeometry.setAttribute("uv", new THREE.BufferAttribute(fireUVs, 2));
 
     const fireMaterial = new THREE.PointsMaterial({
-      size: 5,
+      size: 60,
       map: this.fireTexture,
       transparent: true,
       opacity: 0.8,
@@ -570,14 +601,17 @@ export class EnemyBoatSystem {
       );
     } else {
       collisionOccurred = true;
-      const pushBackDirection = directionToPlayer.clone().negate();
-      const pushBackStrength = (this.MIN_DISTANCE - distanceToPlayer) * 4;
+
+      const pushBackDirection = new THREE.Vector3()
+        .subVectors(this.enemyBoat.position, this.playerBoat.position)
+        .normalize();
+      const pushBackStrength = 10;
 
       this.enemyBoat.position.add(
-        pushBackDirection.clone().multiplyScalar(pushBackStrength)
+        pushBackDirection.multiplyScalar(pushBackStrength)
       );
-      this.playerBoat.position.add(
-        directionToPlayer.clone().multiplyScalar(pushBackStrength)
+      this.playerBoat.position.sub(
+        pushBackDirection.multiplyScalar(pushBackStrength)
       );
 
       currentSpeed *= 0.5;
@@ -594,6 +628,8 @@ export class EnemyBoatSystem {
         collisionPoint,
         new THREE.Vector3(0, 1, 0)
       );
+
+      healthSystem.takeDamage(20);
     }
 
     if (!this.isDestroyed) {

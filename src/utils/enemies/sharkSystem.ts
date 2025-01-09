@@ -14,6 +14,8 @@ export class SharkSystem {
   private spawnInterval = 5000;
   private lastSpawnTime = 0;
   private maxSharks = 3;
+  private boatRadius = 5;
+  private repulsionForce = 20;
 
   constructor(
     scene: THREE.Scene,
@@ -42,6 +44,7 @@ export class SharkSystem {
       );
 
       shark.userData.health = 100;
+      shark.userData.velocity = new THREE.Vector3();
       this.sharks.push(shark);
       this.scene.add(shark);
     } catch (error) {
@@ -65,16 +68,36 @@ export class SharkSystem {
         .subVectors(this.targetBoat.position, shark.position)
         .normalize();
 
-      shark.position.add(direction.multiplyScalar(this.sharkSpeed * deltaTime));
+      const distanceToBoat = shark.position.distanceTo(
+        this.targetBoat.position
+      );
+
+      if (!shark.userData.velocity) {
+        shark.userData.velocity = new THREE.Vector3();
+      }
+
+      if (distanceToBoat < this.boatRadius + this.damageRange) {
+        const repulsionDirection = direction.clone().multiplyScalar(-1);
+        shark.userData.velocity.add(
+          repulsionDirection.multiplyScalar(this.repulsionForce * deltaTime)
+        );
+      } else if (distanceToBoat < this.attackRange) {
+        shark.userData.velocity.add(
+          direction.multiplyScalar(this.sharkSpeed * deltaTime)
+        );
+      }
+
+      shark.userData.velocity.multiplyScalar(0.95);
+
+      shark.position.add(
+        shark.userData.velocity.clone().multiplyScalar(deltaTime)
+      );
 
       const targetPosition = this.targetBoat.position.clone();
       targetPosition.y = shark.position.y;
-
       const lookDirection = targetPosition.clone().sub(shark.position);
-
       const angle = Math.atan2(lookDirection.x, lookDirection.z);
       shark.rotation.y = angle;
-
       shark.rotation.x = 0;
 
       bullets.forEach((bullet, bulletIndex) => {
@@ -90,12 +113,6 @@ export class SharkSystem {
           }
         }
       });
-
-      if (
-        shark.position.distanceTo(this.targetBoat.position) < this.damageRange
-      ) {
-        console.log("Shark attacked boat!");
-      }
 
       const time = performance.now() * 0.001;
       shark.position.y = 2 + Math.sin(time * 2) * 0.5;
