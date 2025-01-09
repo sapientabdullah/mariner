@@ -53,20 +53,11 @@ export class RearViewMirrorSystem {
     const currentViewport = renderer.getViewport(new THREE.Vector4());
 
     const x = (window.innerWidth - this.mirrorWidth) / 2;
+    const y = window.innerHeight - this.mirrorHeight - 65;
 
-    renderer.setViewport(
-      x,
-      window.innerHeight - this.mirrorHeight - 20,
-      this.mirrorWidth,
-      this.mirrorHeight
-    );
+    renderer.setViewport(x, y, this.mirrorWidth, this.mirrorHeight);
     renderer.setScissorTest(true);
-    renderer.setScissor(
-      x,
-      window.innerHeight - this.mirrorHeight - 20,
-      this.mirrorWidth,
-      this.mirrorHeight
-    );
+    renderer.setScissor(x, y, this.mirrorWidth, this.mirrorHeight);
 
     renderer.render(scene, this.rearCamera);
 

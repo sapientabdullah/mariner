@@ -21,6 +21,7 @@
   </div>
 
   <div id="pause-overlay" class="hidden">
+    <img src="/textures/vignette.png" aria-hidden="true" id="vignette" />
     <div class="pause-content">
       <div class="scanlines"></div>
       <div class="game-logo">
@@ -111,15 +112,22 @@
       <div class="glitch-container">
         <h1 id="game-over-text">Mission Failed</h1>
       </div>
-      <p>Final Score: <span id="final-score"></span></p>
+      <div class="final-score">Final Score: <span id="final-score"></span></div>
       <p>Rank: <span id="player-rank"></span></p>
       <button id="restart-button" class="restart-button">Deploy Again</button>
     </div>
   </div>
 
-  <div id="heat-ui"
-    style="position: fixed; bottom: 20px; left: 20px; width: 200px; height: 20px; background: #222; border: 2px solid #fff;">
-    <div id="heat-bar" style="height: 100%; width: 0%; background: red;"></div>
+  <div class="heat-gauge">
+    <div class="gauge-container">
+      <div id="heat-bar">
+        <div class="heat-glow"></div>
+      </div>
+      <div class="gauge-markers">
+        <div class="marker"></div>
+      </div>
+    </div>
+    <div class="warning" id="overheat-warning">⚠️</div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

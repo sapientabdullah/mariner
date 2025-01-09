@@ -9,6 +9,7 @@ export class BulletSystem {
   private scene: THREE.Scene;
   private bullets: THREE.Mesh[] = [];
   private gunSoundPool: THREE.Audio[] = [];
+  private overheatSound: THREE.Audio | null = null;
   private currentGunSoundIndex: number = 0;
   private lastFireTime: number = 0;
   private oceanWaterLevel: number;
@@ -28,7 +29,7 @@ export class BulletSystem {
   private heat: number = 0;
   private readonly HEAT_INCREMENT = 20;
   private readonly COOL_DOWN_RATE = 100;
-  private readonly MAX_HEAT = 10000;
+  private readonly MAX_HEAT = 1000;
   private overheating: boolean = false;
 
   private readonly bulletGeometry: THREE.SphereGeometry;
@@ -79,6 +80,14 @@ export class BulletSystem {
         sound.setVolume(0.3);
         this.gunSoundPool.push(sound);
       }
+
+      const overheatBuffer = await audioLoader.loadAsync(
+        "/audio/gun-overheat.mp3"
+      );
+      this.overheatSound = new THREE.Audio(listener);
+      this.overheatSound.setBuffer(overheatBuffer);
+      this.overheatSound.setLoop(false);
+      this.overheatSound.setVolume(0.5);
     } catch (error) {
       console.error("Error loading gunshot sounds:", error);
     }
@@ -102,7 +111,12 @@ export class BulletSystem {
 
     this.heat += this.HEAT_INCREMENT;
     if (this.heat >= this.MAX_HEAT) {
-      this.overheating = true;
+      if (!this.overheating) {
+        this.overheating = true;
+        if (this.overheatSound && !this.overheatSound.isPlaying) {
+          this.overheatSound.play();
+        }
+      }
     }
 
     if (currentTurretAction && !currentTurretAction.isRunning()) {
@@ -194,6 +208,7 @@ export class BulletSystem {
     const currentTime = performance.now();
 
     const heatBar = document.getElementById("heat-bar") as HTMLElement;
+    const warning = document.getElementById("overheat-warning") as HTMLElement;
 
     if (heatBar) {
       const heatPercentage = (this.heat / this.MAX_HEAT) * 100;
@@ -201,12 +216,16 @@ export class BulletSystem {
 
       if (this.overheating) {
         heatBar.style.background = "darkred";
-      } else if (this.heat > 75) {
+        warning.style.display = "block";
+      } else if (this.heat > this.MAX_HEAT * 0.75) {
         heatBar.style.background = "red";
-      } else if (this.heat > 50) {
+        warning.style.display = "none";
+      } else if (this.heat > this.MAX_HEAT * 0.5) {
         heatBar.style.background = "orange";
+        warning.style.display = "none";
       } else {
         heatBar.style.background = "green";
+        warning.style.display = "none";
       }
     }
 
