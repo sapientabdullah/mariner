@@ -17,9 +17,9 @@ export class BombSystem {
   private readonly BOMB_COOLDOWN = 5000;
   private readonly BOMB_SIZE = 2;
   private readonly BOMB_SPEED = 200;
-  private readonly EXPLOSION_RADIUS = 400;
+  private readonly EXPLOSION_RADIUS = 700;
   private readonly GRAVITY = -9.81;
-  private readonly OBSTACLE_DAMAGE = 3;
+  private readonly OBSTACLE_DAMAGE = 5;
 
   private bombGeometry = new THREE.CylinderGeometry(
     this.BOMB_SIZE,

@@ -15,12 +15,12 @@ export class EnemyBoatSystem {
   private camera: THREE.Camera;
   private bullets: THREE.Mesh[] = [];
   private cannonSound: THREE.Audio | null = null;
-  private readonly SHOOTING_RANGE = 200;
+  private readonly SHOOTING_RANGE = 800;
   private readonly SHOOTING_INTERVAL = 1;
   private readonly ENEMY_SPEED = 20;
   private readonly ENEMY_ROTATION_SPEED = 0.02;
   private readonly DAMAGE_THRESHOLD = 30;
-  private readonly BULLET_COLLISION_RADIUS = 25;
+  private readonly BULLET_COLLISION_RADIUS = 50;
   private readonly MIN_DISTANCE = 300;
 
   private lastShotTime = 0;
@@ -236,7 +236,7 @@ export class EnemyBoatSystem {
     }
 
     const remainingBullets: THREE.Mesh[] = [];
-    const hitDistance = 15;
+    const hitDistance = 140;
 
     for (const bullet of bullets) {
       const distance = bullet.position.distanceTo(this.enemyBoat.position);

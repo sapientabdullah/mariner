@@ -28,8 +28,8 @@ export class BulletSystem {
   private readonly GUNSHOT_POOL_SIZE = 8;
   private heat: number = 0;
   private readonly HEAT_INCREMENT = 20;
-  private readonly COOL_DOWN_RATE = 100;
-  private readonly MAX_HEAT = 1000;
+  private readonly COOL_DOWN_RATE = 500;
+  private readonly MAX_HEAT = 2000;
   private overheating: boolean = false;
 
   private readonly bulletGeometry: THREE.SphereGeometry;
