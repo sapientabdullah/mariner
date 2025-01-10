@@ -62,7 +62,7 @@ body {
 
 .marking-label {
   color: white;
-  font-family: "Jura";
+  font-family: "Jura", sans-serif;
   font-size: 16px;
   position: absolute;
   bottom: 25px;
@@ -95,7 +95,7 @@ body {
   text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
   transform: perspective(400px) rotateX(45deg) translateY(-2px);
   margin-right: 10px;
-  font-family: "Jura", monospace;
+  font-family: "Jura", sans-serif;
 }
 
 .health-bar-container {
@@ -242,7 +242,7 @@ body {
   z-index: 1000;
   display: flex;
   align-items: center;
-  font-family: 'Jura', Arial;
+  font-family: "Jura", sans-serif;
 }
 
 #pause-overlay.hidden {
@@ -608,7 +608,7 @@ input:checked+.toggle-slider:before {
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle, rgba(0, 20, 40, 0.95), rgba(0, 10, 25, 0.98));
-  font-family: 'Jura', sans-serif;
+  font-family: "Jura", sans-serif;
   animation: backgroundPulse 4s infinite;
 }
 
@@ -676,7 +676,7 @@ input:checked+.toggle-slider:before {
   background: rgba(137, 207, 240, 0.1);
   color: #89CFF0;
   border: 2px solid #89CFF0;
-  font-family: 'Jura', sans-serif;
+  font-family: "Jura", sans-serif;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -803,7 +803,7 @@ input:checked+.toggle-slider:before {
   border-bottom: 5px solid #333333;
   border-left: 2px solid #333333;
   border-right: 2px solid #333333;
-  font-family: 'Jura', sans-serif;
+  font-family: "Jura", sans-serif;
 }
 
 .gauge-container {
