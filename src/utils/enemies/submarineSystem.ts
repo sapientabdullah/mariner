@@ -5,10 +5,10 @@ import { loadingManager } from "../managers/loadingManager";
 
 export class SubmarineSystem {
   private submarine: THREE.Object3D | null = null;
-  private scene: THREE.Scene;
-  private waterSplashSystem: WaterSplashSystem;
-  private playerBoat: THREE.Object3D;
-  private camera: THREE.Camera;
+  private readonly scene: THREE.Scene;
+  private readonly waterSplashSystem: WaterSplashSystem;
+  private readonly playerBoat: THREE.Object3D;
+  private readonly camera: THREE.Camera;
   private torpedoes: THREE.Mesh[] = [];
 
   private sonarSound: THREE.Audio | null = null;
@@ -26,8 +26,8 @@ export class SubmarineSystem {
   private readonly SUBMERGE_DURATION = 3000;
 
   private isSubmerged = false;
-  private isTransitioning = false;
-  private currentHealth = 100;
+  private readonly isTransitioning = false;
+  private readonly currentHealth = 100;
   private lastTorpedoTime = 0;
   private submarineState:
     | "surfacing"
@@ -35,8 +35,8 @@ export class SubmarineSystem {
     | "surface"
     | "underwater" = "underwater";
   private stateStartTime = 0;
-  private surfaceTime = 8000; // Time to stay on surface
-  private underwaterTime = 15000; // Time to stay underwater
+  private readonly surfaceTime = 8000; // Time to stay on surface
+  private readonly underwaterTime = 15000; // Time to stay underwater
 
   private bubbleParticles: THREE.Points[] = [];
 

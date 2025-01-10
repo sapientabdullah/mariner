@@ -143,7 +143,7 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
   });
   scene.add(boat);
   createTurret();
-  healthSystem = new HealthSystem(100, () => {
+  healthSystem = new HealthSystem(() => {
     isPaused = true;
     handleGameOver();
   });
@@ -255,7 +255,7 @@ function setupBoatSounds() {
 function updateBoatSounds(deltaTime: number) {
   if (!boat || isPaused) return;
 
-  if (engineSound && engineSound.isPlaying) {
+  if (engineSound?.isPlaying) {
     const targetVolume = Math.abs(currentSpeed) / MAX_SPEED;
     const currentVolume = engineSound.getVolume();
     const newVolume = THREE.MathUtils.lerp(
@@ -266,7 +266,7 @@ function updateBoatSounds(deltaTime: number) {
     engineSound.setVolume(newVolume);
   }
 
-  if (engineIdleSound && engineIdleSound.isPlaying) {
+  if (engineIdleSound?.isPlaying) {
     const targetVolume = 1 - Math.abs(currentSpeed) / MAX_SPEED;
     const currentVolume = engineIdleSound.getVolume();
     const newVolume = THREE.MathUtils.lerp(

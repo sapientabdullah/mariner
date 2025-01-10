@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
 export class StaticObjectSystem {
-  private scene: THREE.Scene;
-  private islands: THREE.Object3D[] = [];
+  private readonly scene: THREE.Scene;
+  private readonly islands: THREE.Object3D[] = [];
   private lighthouse: THREE.Object3D | null = null;
   private readonly ISLAND_COLLISION_RADIUS = 2000;
   private readonly LIGHTHOUSE_COLLISION_RADIUS = 3000;

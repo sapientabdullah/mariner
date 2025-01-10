@@ -5,17 +5,17 @@ import { ScoreSystem } from "../progression/scoringSystem";
 
 export class SharkSystem {
   private sharks: THREE.Object3D[] = [];
-  private scene: THREE.Scene;
-  private targetBoat: THREE.Object3D;
-  private scoreSystem: ScoreSystem;
-  private sharkSpeed = 50;
-  private attackRange = 100;
-  private damageRange = 10;
-  private spawnInterval = 5000;
+  private readonly scene: THREE.Scene;
+  private readonly targetBoat: THREE.Object3D;
+  private readonly scoreSystem: ScoreSystem;
+  private readonly sharkSpeed = 50;
+  private readonly attackRange = 100;
+  private readonly damageRange = 10;
+  private readonly spawnInterval = 5000;
   private lastSpawnTime = 0;
-  private maxSharks = 3;
-  private boatRadius = 5;
-  private repulsionForce = 20;
+  private readonly maxSharks = 3;
+  private readonly boatRadius = 5;
+  private readonly repulsionForce = 20;
 
   constructor(
     scene: THREE.Scene,

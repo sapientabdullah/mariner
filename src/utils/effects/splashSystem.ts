@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
 export class WaterSplashSystem {
-  private splashTexture: THREE.Texture;
-  private splashes: THREE.Sprite[] = [];
-  private scene: THREE.Scene;
+  private readonly splashTexture: THREE.Texture;
+  private readonly splashes: THREE.Sprite[] = [];
+  private readonly scene: THREE.Scene;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;

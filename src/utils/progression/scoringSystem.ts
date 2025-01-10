@@ -10,7 +10,7 @@ interface ScorePopup {
 
 export class ScoreSystem {
   private score: number = 0;
-  private scene: THREE.Scene;
+  private readonly scene: THREE.Scene;
   private activePopups: ScorePopup[] = [];
   private multiplier: number = 1;
   private multiplierTimer: number = 0;

@@ -216,12 +216,12 @@ export class ObstacleSystem {
   private readonly MIN_OBSTACLE_SPACING = 50;
   private readonly MIN_HITS_TO_DESTROY = 3;
   private readonly MAX_HITS_TO_DESTROY = 7;
-  private scene: THREE.Scene;
+  private readonly scene: THREE.Scene;
   private collisionSound: THREE.Audio | null = null;
   private explosionSound: THREE.Audio | null = null;
-  private textureLoader: THREE.TextureLoader;
-  private explosionTexture: THREE.Texture;
-  private scoreSystem: ScoreSystem;
+  private readonly textureLoader: THREE.TextureLoader;
+  private readonly explosionTexture: THREE.Texture;
+  private readonly scoreSystem: ScoreSystem;
 
   constructor(
     scene: THREE.Scene,

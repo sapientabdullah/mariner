@@ -1,14 +1,14 @@
 import * as THREE from "three";
 
 export class WaterSpoutSystem {
-  private scene: THREE.Scene;
+  private readonly scene: THREE.Scene;
   private spouts: THREE.Sprite[] = [];
-  private spoutTexture: THREE.Texture;
+  private readonly spoutTexture: THREE.Texture;
   private nextSpoutTime: number = 0;
-  private SPOUT_INTERVAL = 10000;
-  private SPOUT_LIFETIME = 3000; // 3 seconds per spout
-  private SPOUT_RANGE = 500;
-  private boatReference: THREE.Object3D;
+  private readonly SPOUT_INTERVAL = 10000;
+  private readonly SPOUT_LIFETIME = 3000; // 3 seconds per spout
+  private readonly SPOUT_RANGE = 500;
+  private readonly boatReference: THREE.Object3D;
   private whaleSounds: THREE.Audio[] = [];
 
   constructor(

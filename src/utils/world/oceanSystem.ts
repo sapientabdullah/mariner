@@ -5,7 +5,7 @@ import { Audio, AudioListener, AudioLoader } from "three";
 export class OceanSystem {
   water!: Water;
   oceanSound!: Audio;
-  private scene: THREE.Scene;
+  private readonly scene: THREE.Scene;
 
   constructor(scene: THREE.Scene, audioListener: AudioListener) {
     this.scene = scene;

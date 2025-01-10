@@ -6,14 +6,14 @@ import { healthSystem } from "../../main";
 
 export class EnemyBoatSystem {
   private enemyBoat: THREE.Object3D | null = null;
-  private scene: THREE.Scene;
-  private waterSplashSystem: WaterSplashSystem;
-  private playerBoat: THREE.Object3D;
+  private readonly scene: THREE.Scene;
+  private readonly waterSplashSystem: WaterSplashSystem;
+  private readonly playerBoat: THREE.Object3D;
   private collisionSound: THREE.Audio | null = null;
   private explosionSound: THREE.Audio | null = null;
   private engineSound: THREE.Audio | null = null;
   private fireTexture: THREE.Texture | null = null;
-  private camera: THREE.Camera;
+  private readonly camera: THREE.Camera;
   private bullets: THREE.Mesh[] = [];
   private cannonSound: THREE.Audio | null = null;
   private readonly SHOOTING_RANGE = 1500;
@@ -26,7 +26,7 @@ export class EnemyBoatSystem {
   private readonly FIRING_ANGLE_THRESHOLD = 0.3;
 
   private lastShotTime = 0;
-  private maxHealth = 100;
+  private readonly maxHealth = 100;
   private currentHealth = 100;
   private isDestroyed = false;
   private fireParticles: THREE.Points[] = [];
@@ -513,7 +513,7 @@ export class EnemyBoatSystem {
     currentSpeed: number;
   } {
     if (!this.enemyBoat || this.isDestroyed) {
-      if (this.engineSound && this.engineSound.isPlaying) {
+      if (this.engineSound?.isPlaying) {
         this.engineSound.stop();
       }
       return { collisionOccurred: false, currentSpeed: 0 };

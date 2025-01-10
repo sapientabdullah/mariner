@@ -3,8 +3,8 @@ export class ReticleSystem {
   private reticleY: number;
   private reticleElement: SVGElement | null = null;
   private readonly RETICLE_SIZE = 100;
-  private reticleOffsetX: number;
-  private reticleOffsetY: number;
+  private readonly reticleOffsetX: number;
+  private readonly reticleOffsetY: number;
 
   constructor(offsetX = 0, offsetY = 0) {
     this.reticleOffsetX = offsetX;

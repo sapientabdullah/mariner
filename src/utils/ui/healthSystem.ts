@@ -1,8 +1,8 @@
 export class HealthSystem {
-  private maxHealth: number;
+  private readonly maxHealth: number;
   private currentHealth: number;
   private healthBarFill: HTMLElement | null;
-  private onGameOver: () => void;
+  private readonly onGameOver: () => void;
   private lastDamageTime: number;
   private readonly REGEN_DELAY: number = 5000;
   private readonly DAMAGE_COOLDOWN: number;
@@ -11,7 +11,7 @@ export class HealthSystem {
   private readonly LOW_HEALTH_THRESHOLD: number = 30;
   private readonly DAMAGE_FLASH_DURATION: number = 200;
 
-  constructor(maxHealth: number = 100, onGameOver: () => void) {
+  constructor(onGameOver: () => void, maxHealth: number = 100) {
     this.maxHealth = maxHealth;
     this.currentHealth = maxHealth;
     this.healthBarFill = null;

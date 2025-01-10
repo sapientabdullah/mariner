@@ -1,10 +1,10 @@
 import * as THREE from "three";
 
 export class RearViewMirrorSystem {
-  private rearCamera: THREE.PerspectiveCamera;
+  private readonly rearCamera: THREE.PerspectiveCamera;
   private mirrorWidth: number;
   private mirrorHeight: number;
-  private boat: THREE.Object3D;
+  private readonly boat: THREE.Object3D;
 
   constructor(boat: THREE.Object3D) {
     this.boat = boat;

@@ -59,12 +59,12 @@ class MuzzleFlashParticle {
 }
 
 export class MuzzleFlashSystem {
-  private scene: THREE.Scene;
-  private camera: THREE.Camera;
+  private readonly scene: THREE.Scene;
+  private readonly camera: THREE.Camera;
   private particles: MuzzleFlashParticle[] = [];
-  private flashTexture: THREE.Texture;
-  private flashGeometry: THREE.PlaneGeometry;
-  private flashMaterial: THREE.MeshBasicMaterial;
+  private readonly flashTexture: THREE.Texture;
+  private readonly flashGeometry: THREE.PlaneGeometry;
+  private readonly flashMaterial: THREE.MeshBasicMaterial;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera) {
     this.scene = scene;

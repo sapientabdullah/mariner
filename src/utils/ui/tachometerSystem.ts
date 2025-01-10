@@ -2,8 +2,8 @@ export class TachometerSystem {
   private container!: HTMLDivElement;
   private displayElement!: HTMLDivElement;
   private progressRing!: HTMLDivElement;
-  private maxRPM: number;
-  private markings: HTMLDivElement[] = [];
+  private readonly maxRPM: number;
+  private readonly markings: HTMLDivElement[] = [];
 
   constructor(maxRPM: number = 7000) {
     this.maxRPM = maxRPM;

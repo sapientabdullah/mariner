@@ -110,7 +110,7 @@ export class SeagullSystem {
 
       if (seagull.sound && boat) {
         const distanceToBoat = seagull.position.distanceTo(boat.position);
-        const timeSinceLastSound = currentTime - (seagull.lastSoundTime || 0);
+        const timeSinceLastSound = currentTime - (seagull.lastSoundTime ?? 0);
 
         if (distanceToBoat < 100 && timeSinceLastSound > 10000) {
           if (!seagull.sound.isPlaying) {

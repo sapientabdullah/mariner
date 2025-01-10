@@ -6,17 +6,17 @@ import { SmokeSystem } from "../effects/smokeSystem";
 import { currentTurretAction } from "../../main";
 
 export class BulletSystem {
-  private scene: THREE.Scene;
+  private readonly scene: THREE.Scene;
   private bullets: THREE.Mesh[] = [];
   private gunSoundPool: THREE.Audio[] = [];
   private overheatSound: THREE.Audio | null = null;
   private currentGunSoundIndex: number = 0;
   private lastFireTime: number = 0;
-  private oceanWaterLevel: number;
-  private textureLoader: THREE.TextureLoader;
-  private splashTexture: THREE.Texture;
-  private smokeSystem: SmokeSystem;
-  private muzzleFlashSystem: MuzzleFlashSystem;
+  private readonly oceanWaterLevel: number;
+  private readonly textureLoader: THREE.TextureLoader;
+  private readonly splashTexture: THREE.Texture;
+  private readonly smokeSystem: SmokeSystem;
+  private readonly muzzleFlashSystem: MuzzleFlashSystem;
 
   private readonly BULLET_SPEED = 1000;
   private readonly BULLET_SIZE = 0.2;

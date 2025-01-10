@@ -6,12 +6,12 @@ import { SharkSystem } from "../enemies/sharkSystem";
 export class BombSystem {
   private bombs: THREE.Mesh[] = [];
   private lastBombTime: number = 0;
-  private scene: THREE.Scene;
-  private enemyBoatSystem: EnemyBoatSystem;
-  private obstacleSystem: ObstacleSystem;
-  private sharkSystem: SharkSystem;
-  private explosionTexture: THREE.Texture;
-  private splashTexture: THREE.Texture;
+  private readonly scene: THREE.Scene;
+  private readonly enemyBoatSystem: EnemyBoatSystem;
+  private readonly obstacleSystem: ObstacleSystem;
+  private readonly sharkSystem: SharkSystem;
+  private readonly explosionTexture: THREE.Texture;
+  private readonly splashTexture: THREE.Texture;
   private explosionSound: THREE.Audio | null = null;
   private firingSound: THREE.Audio | null = null;
   private readonly BOMB_COOLDOWN = 5000;
@@ -20,15 +20,15 @@ export class BombSystem {
   private readonly EXPLOSION_RADIUS = 700;
   private readonly GRAVITY = -9.81;
   private readonly OBSTACLE_DAMAGE = 5;
-  private reloadSpinner: HTMLElement | null = null;
+  private readonly reloadSpinner: HTMLElement | null = null;
 
-  private bombGeometry = new THREE.CylinderGeometry(
+  private readonly bombGeometry = new THREE.CylinderGeometry(
     this.BOMB_SIZE,
     this.BOMB_SIZE,
     4,
     12
   );
-  private bombMaterial = new THREE.MeshStandardMaterial({
+  private readonly bombMaterial = new THREE.MeshStandardMaterial({
     color: 0x555555,
     roughness: 0.5,
     metalness: 1,

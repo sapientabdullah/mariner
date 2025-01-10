@@ -54,12 +54,12 @@ class SmokeParticle {
 }
 
 export class SmokeSystem {
-  private scene: THREE.Scene;
-  private camera: THREE.Camera;
+  private readonly scene: THREE.Scene;
+  private readonly camera: THREE.Camera;
   private particles: SmokeParticle[] = [];
-  private smokeTexture: THREE.Texture;
-  private smokeGeometry: THREE.PlaneGeometry;
-  private smokeMaterial: THREE.MeshBasicMaterial;
+  private readonly smokeTexture: THREE.Texture;
+  private readonly smokeGeometry: THREE.PlaneGeometry;
+  private readonly smokeMaterial: THREE.MeshBasicMaterial;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera) {
     this.scene = scene;

@@ -3,8 +3,8 @@ export class SpeedometerSystem {
   private dialElement!: HTMLDivElement;
   private needleElement!: HTMLDivElement;
   private speedTextElement!: HTMLDivElement;
-  private maxSpeed: number;
-  private markings: HTMLDivElement[];
+  private readonly maxSpeed: number;
+  private readonly markings: HTMLDivElement[];
 
   constructor(maxSpeed: number) {
     this.maxSpeed = maxSpeed;

@@ -4,12 +4,12 @@ import { Sky } from "three/addons/objects/Sky.js";
 import { Water } from "three/addons/objects/Water.js";
 
 export class SkySystem {
-  private sun: THREE.Vector3;
-  private sky: Sky;
-  private pmremGenerator: THREE.PMREMGenerator;
-  private parameters: { elevation: number; azimuth: number };
-  private water: Water;
-  private scene: THREE.Scene;
+  private readonly sun: THREE.Vector3;
+  private readonly sky: Sky;
+  private readonly pmremGenerator: THREE.PMREMGenerator;
+  private readonly parameters: { elevation: number; azimuth: number };
+  private readonly water: Water;
+  private readonly scene: THREE.Scene;
   private lastUpdateTime: number;
 
   constructor(

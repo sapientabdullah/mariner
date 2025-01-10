@@ -2,10 +2,10 @@ import * as THREE from "three";
 import { ScoreSystem } from "./scoringSystem";
 
 export class CheckpointSystem {
-  private checkpoints: THREE.Vector3[] = [];
+  private readonly checkpoints: THREE.Vector3[] = [];
   private currentCheckpointMesh: THREE.Object3D | null = null;
   private currentCheckpointIndex: number = 0;
-  private scene: THREE.Scene;
+  private readonly scene: THREE.Scene;
   private currentTextSprite: THREE.Sprite | null = null;
   private timeSprite: THREE.Sprite | null = null;
   private checkpointSound: THREE.Audio | null = null;
@@ -15,7 +15,7 @@ export class CheckpointSystem {
   private readonly TEXT_SPACING = 20;
   private readonly TIME_PER_CHECKPOINT = 30;
   private timeRemaining: number;
-  private onTimeUp: () => void;
+  private readonly onTimeUp: () => void;
   private ringMaterial: THREE.MeshBasicMaterial | null = null;
   private lineMaterial: THREE.MeshBasicMaterial | null = null;
 
