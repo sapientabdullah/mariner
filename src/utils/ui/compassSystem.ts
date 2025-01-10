@@ -78,7 +78,7 @@ function createCompassMarkings(): string {
 export function updateCompass(checkpointSystem?: CheckpointSystem) {
   if (!boat) return;
 
-  let adjustedRotation = boat.rotation.y - Math.PI + Math.PI / 2;
+  const adjustedRotation = boat.rotation.y - Math.PI + Math.PI / 2;
   const { angle } = getCompassDirection(adjustedRotation);
 
   if (checkpointSystem && boat) {
@@ -91,7 +91,7 @@ export function updateCompass(checkpointSystem?: CheckpointSystem) {
         ) *
         (180 / Math.PI);
 
-      let compassDirection = (-directionToCheckpoint + 270) % 360;
+      const compassDirection = (-directionToCheckpoint + 270) % 360;
 
       const pointer = document.querySelector(
         ".checkpoint-pointer"

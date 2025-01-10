@@ -85,7 +85,7 @@ export class WaterSpoutSystem {
     }
   }
 
-  update(_deltaTime: number) {
+  update() {
     const currentTime = performance.now();
 
     if (currentTime > this.nextSpoutTime) {

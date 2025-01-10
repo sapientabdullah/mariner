@@ -88,8 +88,7 @@ let isMouseDown = false;
 let engineSound: Audio;
 let engineIdleSound: Audio;
 let waterSplashSound: Audio;
-let scoreSystem: ScoreSystem;
-scoreSystem = new ScoreSystem(scene);
+const scoreSystem = new ScoreSystem(scene);
 
 const reticleSystem = new ReticleSystem(0, -135);
 reticleSystem.toggleVisibility(false);
@@ -357,7 +356,7 @@ function updateGameState(deltaTime: number) {
   }
 
   if (waterSpoutSystem) {
-    waterSpoutSystem.update(deltaTime);
+    waterSpoutSystem.update();
   }
 
   if (isMouseDown && !isPaused && document.pointerLockElement) {

@@ -92,7 +92,7 @@ export class SmokeSystem {
       const horizontalAngle = (Math.random() - 0.5) * spreadAngle;
       const verticalAngle = (Math.random() - 0.5) * spreadAngle;
 
-      let randomVelocity = new THREE.Vector3().copy(forwardVector);
+      const randomVelocity = new THREE.Vector3().copy(forwardVector);
       randomVelocity.applyAxisAngle(upVector, horizontalAngle);
       randomVelocity.applyAxisAngle(rightVector, verticalAngle);
       randomVelocity.multiplyScalar(Math.random() * 2 + 1);
