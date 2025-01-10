@@ -15,10 +15,10 @@ interface Seagull extends THREE.Group {
 }
 
 export class SeagullSystem {
-  private seagulls: Seagull[] = [];
+  private readonly seagulls: Seagull[] = [];
   private seagullSound: AudioBuffer | null = null;
-  private scene: THREE.Scene;
-  private audioListener: AudioListener;
+  private readonly scene: THREE.Scene;
+  private readonly audioListener: AudioListener;
 
   constructor(scene: THREE.Scene, audioListener: AudioListener) {
     this.scene = scene;

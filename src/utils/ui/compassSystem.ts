@@ -54,7 +54,7 @@ function createCompassMarkings(): string {
     } else if (isMinor) {
       label =
         DIRECTION_MAPPINGS.find((m) => m.angle === normalizedAngle)
-          ?.direction || "";
+          ?.direction ?? "";
     }
 
     markings += `
