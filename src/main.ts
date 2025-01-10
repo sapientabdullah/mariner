@@ -474,21 +474,22 @@ function updateGameState(deltaTime: number) {
         currentSpeed - ACCELERATION * deltaTime,
         -MAX_SPEED
       );
+
       const rotationFactor = Math.cos(boat.rotation.y);
       targetPitchTilt =
         MAX_PITCH_TILT * (currentSpeed / MAX_SPEED) * rotationFactor;
     } else {
+      const rotationFactor = Math.cos(boat.rotation.y);
+
       if (Math.abs(currentSpeed) < DECELERATION * deltaTime) {
         currentSpeed = 0;
         targetPitchTilt = 0;
       } else if (currentSpeed > 0) {
         currentSpeed -= DECELERATION * deltaTime;
-        const rotationFactor = Math.cos(boat.rotation.y);
         targetPitchTilt =
           -MAX_PITCH_TILT * (currentSpeed / MAX_SPEED) * rotationFactor;
       } else if (currentSpeed < 0) {
         currentSpeed += DECELERATION * deltaTime;
-        const rotationFactor = Math.cos(boat.rotation.y);
         targetPitchTilt =
           MAX_PITCH_TILT * (currentSpeed / MAX_SPEED) * rotationFactor;
       }
