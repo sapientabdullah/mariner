@@ -38,7 +38,6 @@ export class SubmarineSystem {
   private surfaceTime = 8000; // Time to stay on surface
   private underwaterTime = 15000; // Time to stay underwater
 
-  // Particle systems
   private bubbleParticles: THREE.Points[] = [];
 
   constructor(
@@ -260,51 +259,92 @@ export class SubmarineSystem {
 
     this.updateTorpedoes(deltaTime);
 
-    let targetHeight = this.SUBMERGED_HEIGHT;
-    if (this.submarineState === "surface") {
-      targetHeight = this.SURFACE_HEIGHT;
-    } else if (this.submarineState === "surfacing") {
-      const progress =
-        (currentTime - this.stateStartTime) / this.SUBMERGE_DURATION;
-      targetHeight =
-        this.SUBMERGED_HEIGHT +
-        (this.SURFACE_HEIGHT - this.SUBMERGED_HEIGHT) * progress;
-    } else if (this.submarineState === "submerging") {
-      const progress =
-        (currentTime - this.stateStartTime) / this.SUBMERGE_DURATION;
-      targetHeight =
-        this.SURFACE_HEIGHT +
-        (this.SUBMERGED_HEIGHT - this.SURFACE_HEIGHT) * progress;
-    }
-
+    const targetHeight = this.updateSubmarineHeight(currentTime);
     this.submarine.position.y +=
       (targetHeight - this.submarine.position.y) * 0.1;
 
     const directionToPlayer = new THREE.Vector3()
       .subVectors(this.playerBoat.position, this.submarine.position)
       .normalize();
-
-    const targetRotation = Math.atan2(directionToPlayer.x, directionToPlayer.z);
-    let rotationDiff = targetRotation - this.submarine.rotation.y;
-    if (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
-    if (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
-    this.submarine.rotation.y += rotationDiff * this.SUBMARINE_ROTATION_SPEED;
-
     const distanceToPlayer = this.submarine.position.distanceTo(
       this.playerBoat.position
     );
 
-    if (distanceToPlayer > this.MIN_ATTACK_DISTANCE) {
-      this.submarine.position.x +=
-        directionToPlayer.x * this.SUBMARINE_SPEED * deltaTime;
-      this.submarine.position.z +=
-        directionToPlayer.z * this.SUBMARINE_SPEED * deltaTime;
+    this.updateSubmarineRotation(directionToPlayer);
+    this.updateSubmarinePosition(
+      directionToPlayer,
+      distanceToPlayer,
+      deltaTime
+    );
 
-      if (this.isSubmerged && Math.random() < 0.1) {
-        this.createBubbleTrail(this.submarine.position);
+    this.handleSurfaceEffects(currentTime);
+
+    this.handleCombatBehavior(distanceToPlayer);
+  }
+
+  private updateSubmarineHeight(currentTime: number): number {
+    let targetHeight = this.SUBMERGED_HEIGHT;
+
+    switch (this.submarineState) {
+      case "surface":
+        targetHeight = this.SURFACE_HEIGHT;
+        break;
+      case "surfacing": {
+        const progress =
+          (currentTime - this.stateStartTime) / this.SUBMERGE_DURATION;
+        targetHeight =
+          this.SUBMERGED_HEIGHT +
+          (this.SURFACE_HEIGHT - this.SUBMERGED_HEIGHT) * progress;
+        break;
+      }
+      case "submerging": {
+        const progress =
+          (currentTime - this.stateStartTime) / this.SUBMERGE_DURATION;
+        targetHeight =
+          this.SURFACE_HEIGHT +
+          (this.SUBMERGED_HEIGHT - this.SURFACE_HEIGHT) * progress;
+        break;
       }
     }
 
+    return targetHeight;
+  }
+
+  private updateSubmarineRotation(directionToPlayer: THREE.Vector3) {
+    const targetRotation = Math.atan2(directionToPlayer.x, directionToPlayer.z);
+    let rotationDiff = targetRotation - this.submarine!.rotation.y;
+
+    if (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+    if (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+
+    this.submarine!.rotation.y += rotationDiff * this.SUBMARINE_ROTATION_SPEED;
+  }
+
+  private updateSubmarinePosition(
+    directionToPlayer: THREE.Vector3,
+    distanceToPlayer: number,
+    deltaTime: number
+  ) {
+    if (distanceToPlayer > this.MIN_ATTACK_DISTANCE) {
+      const movement = directionToPlayer
+        .clone()
+        .multiplyScalar(this.SUBMARINE_SPEED * deltaTime);
+      this.submarine!.position.add(movement);
+
+      if (this.isSubmerged && Math.random() < 0.1) {
+        this.createBubbleTrail(this.submarine!.position);
+      }
+    }
+  }
+
+  private handleSurfaceEffects(currentTime: number) {
+    if (this.submarineState === "surface") {
+      const time = currentTime * 0.001;
+      this.submarine!.rotation.z = Math.sin(time * 0.5) * 0.05;
+    }
+  }
+
+  private handleCombatBehavior(distanceToPlayer: number) {
     if (
       this.isSubmerged &&
       distanceToPlayer < this.MAX_ATTACK_DISTANCE &&
@@ -320,11 +360,6 @@ export class SubmarineSystem {
       Math.random() < 0.005
     ) {
       this.sonarSound.play();
-    }
-
-    if (this.submarineState === "surface") {
-      const time = currentTime * 0.001;
-      this.submarine.rotation.z = Math.sin(time * 0.5) * 0.05;
     }
   }
 
