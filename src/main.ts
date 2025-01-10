@@ -894,6 +894,10 @@ function handleGameOver(reason = "default") {
   const gameOverOverlay = document.getElementById("game-over-overlay")!;
   const finalScoreElement = document.getElementById("final-score")!;
   const playerRankElement = document.getElementById("player-rank")!;
+  const restartButton = document.getElementById("restart-button-2");
+  if (restartButton) {
+    restartButton.addEventListener("click", handleRestart);
+  }
 
   finalScoreElement.textContent = scoreSystem.getScore().toString();
   playerRankElement.textContent = scoreSystem.getRank(scoreSystem.getScore());

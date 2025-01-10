@@ -678,7 +678,7 @@ input:checked+.toggle-slider:before {
   text-shadow: 0 0 5px rgba(137, 207, 240, 0.7);
 }
 
-.restart-button {
+#restart-button-2 {
   margin-top: 30px;
   padding: 15px 40px;
   font-size: 1.5em;
@@ -694,7 +694,7 @@ input:checked+.toggle-slider:before {
   text-shadow: 0 0 5px rgba(137, 207, 240, 0.7);
 }
 
-.restart-button::before {
+#restart-button-2::before {
   content: '';
   position: absolute;
   top: 0;
@@ -705,11 +705,11 @@ input:checked+.toggle-slider:before {
   transition: 0.5s;
 }
 
-.restart-button:hover::before {
+#restart-button-2:hover::before {
   left: 100%;
 }
 
-.restart-button:hover {
+#restart-button-2:hover {
   background: rgba(137, 207, 240, 0.2);
   color: #BCE6FF;
   border-color: #BCE6FF;

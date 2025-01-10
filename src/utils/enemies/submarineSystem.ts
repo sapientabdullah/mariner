@@ -349,13 +349,11 @@ export class SubmarineSystem {
         torpedoesToRemove.push(torpedo);
       }
 
-      // Check collision with player
       const distanceToPlayer = torpedo.position.distanceTo(
         this.playerBoat.position
       );
       if (distanceToPlayer < 15) {
         torpedoesToRemove.push(torpedo);
-        // Trigger hit effect/damage on player (implement separately)
       }
     });
 
