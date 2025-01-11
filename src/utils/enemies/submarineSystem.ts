@@ -1,14 +1,11 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
-import { WaterSplashSystem } from "../effects/splashSystem";
 import { loadingManager } from "../managers/loadingManager";
 
 export class SubmarineSystem {
   private submarine: THREE.Object3D | null = null;
   private readonly scene: THREE.Scene;
-  private readonly waterSplashSystem: WaterSplashSystem;
   private readonly playerBoat: THREE.Object3D;
-  private readonly camera: THREE.Camera;
   private torpedoes: THREE.Mesh[] = [];
 
   private sonarSound: THREE.Audio | null = null;
@@ -26,8 +23,6 @@ export class SubmarineSystem {
   private readonly SUBMERGE_DURATION = 3000;
 
   private isSubmerged = false;
-  private readonly isTransitioning = false;
-  private readonly currentHealth = 100;
   private lastTorpedoTime = 0;
   private submarineState:
     | "surfacing"
@@ -42,13 +37,10 @@ export class SubmarineSystem {
 
   constructor(
     scene: THREE.Scene,
-    waterSplashSystem: WaterSplashSystem,
     playerBoat: THREE.Object3D,
     camera: THREE.Camera
   ) {
     this.scene = scene;
-    this.camera = camera;
-    this.waterSplashSystem = waterSplashSystem;
     this.playerBoat = playerBoat;
     this.initializeSounds(camera);
     this.createSubmarine();

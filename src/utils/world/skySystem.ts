@@ -10,7 +10,8 @@ export class SkySystem {
   private readonly parameters: { elevation: number; azimuth: number };
   private readonly water: Water;
   private readonly scene: THREE.Scene;
-  private lastUpdateTime: number;
+  private elevationSlider: HTMLInputElement | null;
+  private elevationValue: HTMLSpanElement | null;
 
   constructor(
     scene: THREE.Scene,
@@ -21,7 +22,6 @@ export class SkySystem {
     this.scene = scene;
     this.water = water;
     this.sun = new THREE.Vector3();
-    this.lastUpdateTime = Date.now();
 
     this.sky = new Sky();
     this.sky.scale.setScalar(10000);
@@ -40,6 +40,27 @@ export class SkySystem {
 
     this.pmremGenerator = new THREE.PMREMGenerator(renderer);
     this.pmremGenerator.compileEquirectangularShader();
+
+    this.elevationSlider = document.getElementById(
+      "sun-elevation"
+    ) as HTMLInputElement;
+    this.elevationValue = document.querySelector(
+      ".elevation-value"
+    ) as HTMLSpanElement;
+
+    if (this.elevationSlider && this.elevationValue) {
+      this.elevationSlider.value = this.parameters.elevation.toString();
+      this.elevationValue.textContent = `${this.parameters.elevation}°`;
+
+      this.elevationSlider.addEventListener("input", (e) => {
+        const target = e.target as HTMLInputElement;
+        this.parameters.elevation = parseFloat(target.value);
+        this.elevationValue!.textContent = `${Math.round(
+          this.parameters.elevation
+        )}°`;
+        this.updateSun();
+      });
+    }
 
     this.updateSun();
     if (showGUI) {
@@ -60,21 +81,27 @@ export class SkySystem {
 
     if (this.scene.environment) this.scene.environment.dispose();
 
-    const renderTarget = this.pmremGenerator.fromScene(this.sky);
+    const skyScene = new THREE.Scene();
+    skyScene.add(this.sky);
+
+    const renderTarget = this.pmremGenerator.fromScene(skyScene);
     this.scene.environment = renderTarget.texture;
+
+    skyScene.remove(this.sky);
+    this.scene.add(this.sky);
+  }
+
+  public setElevation(value: number) {
+    if (this.elevationSlider && this.elevationValue) {
+      this.parameters.elevation = value;
+      this.elevationSlider.value = value.toString();
+      this.elevationValue.textContent = `${Math.round(value)}°`;
+      this.updateSun();
+    }
   }
 
   public update(camera: THREE.Camera) {
     this.sky.position.copy(camera.position);
-
-    const currentTime = Date.now();
-    if (currentTime - this.lastUpdateTime >= 60000) {
-      if (this.parameters.elevation < 3) {
-        this.parameters.elevation += 0.1;
-        this.updateSun();
-      }
-      this.lastUpdateTime = currentTime;
-    }
   }
 
   private setupGUI() {

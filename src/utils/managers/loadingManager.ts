@@ -23,11 +23,7 @@ loadingManager.onLoad = () => {
   isLoading = false;
   document.getElementById("loading-screen")?.remove();
 
-  // const interfaceElement = document.getElementById("controls");
-  // if (interfaceElement) {
-  //   interfaceElement.classList.remove("hidden");
-  // }
-
+  showControls();
   startGame();
 };
 
@@ -48,4 +44,21 @@ function updateProgressBar(progress: number) {
 
 export function isLoadingComplete() {
   return !isLoading;
+}
+
+function showControls() {
+  const controls = document.getElementById("controls");
+  if (controls) {
+    controls.style.display = "block";
+    setTimeout(() => {
+      controls.classList.add("visible");
+    }, 10);
+
+    setTimeout(() => {
+      controls.classList.remove("visible");
+      setTimeout(() => {
+        controls.style.display = "none";
+      }, 500);
+    }, 5000);
+  }
 }

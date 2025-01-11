@@ -148,7 +148,7 @@ loader.load("/models/boat/scene.gltf", (gltf) => {
     handleGameOver();
   });
   enemyBoatSystem = new EnemyBoatSystem(scene, waterSplashSystem, boat, camera);
-  submarineSystem = new SubmarineSystem(scene, waterSplashSystem, boat, camera);
+  submarineSystem = new SubmarineSystem(scene, boat, camera);
   obstacleSystem = new ObstacleSystem(scene, scoreSystem, camera);
   sharkSystem = new SharkSystem(scene, boat, scoreSystem);
   bombSystem = new BombSystem(
@@ -727,7 +727,6 @@ function handleResume() {
 
     setTimeout(() => {
       renderer.domElement.requestPointerLock();
-      reticleSystem.centerReticle();
     }, 100);
   }
 }
@@ -757,10 +756,15 @@ function resumeMainAudio() {
 function handleGamePause() {
   isAnimating = false;
   isPaused = true;
+  pointerLockDesired = false;
 
   if (previousAnimationFrame !== null) {
     cancelAnimationFrame(previousAnimationFrame);
     previousAnimationFrame = null;
+  }
+
+  if (document.pointerLockElement) {
+    document.exitPointerLock();
   }
 
   pauseAllAudio();
@@ -772,12 +776,11 @@ function handleGameResume() {
 
   isAnimating = true;
   isPaused = false;
+  pointerLockDesired = true;
   lastTime = performance.now();
   previousAnimationFrame = requestAnimationFrame(animate);
   resumeMainAudio();
   togglePauseUI(false);
-
-  document.exitPointerLock();
 }
 
 function togglePause() {
@@ -790,13 +793,17 @@ function togglePause() {
 
   if (isPaused) {
     handleGamePause();
-    if (document.pointerLockElement) {
-      document.exitPointerLock();
-    }
   } else {
     handleGameResume();
-    renderer.domElement.requestPointerLock();
-    reticleSystem.centerReticle();
+  }
+}
+
+let pointerLockDesired = true;
+
+function togglePointerLock() {
+  pointerLockDesired = !pointerLockDesired;
+  if (!pointerLockDesired && document.pointerLockElement) {
+    document.exitPointerLock();
   }
 }
 
@@ -809,10 +816,6 @@ function setupEventListeners() {
     if (event.key === " " && turret) {
       bombSystem.createBomb(turret);
     }
-  });
-
-  window.addEventListener("keydown", (event) => {
-    keysPressed[event.key] = true;
   });
 
   window.addEventListener("keyup", (event) => {
@@ -836,15 +839,14 @@ function setupEventListeners() {
     oceanSystem.playOceanSound();
   });
 
-  document.addEventListener(
-    "pointerlockchange",
-    () => {
-      if (!document.pointerLockElement && !isPaused) {
+  document.addEventListener("pointerlockchange", () => {
+    if (!document.pointerLockElement) {
+      if (pointerLockDesired && !isPaused && !isGameOver) {
         renderer.domElement.requestPointerLock();
+        togglePointerLock();
       }
-    },
-    false
-  );
+    }
+  });
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
@@ -871,7 +873,9 @@ function setupEventListeners() {
   });
 
   renderer.domElement.addEventListener("click", () => {
-    renderer.domElement.requestPointerLock();
+    if (!isPaused && !isGameOver) {
+      renderer.domElement.requestPointerLock();
+    }
   });
 }
 
