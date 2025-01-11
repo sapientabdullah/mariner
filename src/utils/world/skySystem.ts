@@ -10,8 +10,8 @@ export class SkySystem {
   private readonly parameters: { elevation: number; azimuth: number };
   private readonly water: Water;
   private readonly scene: THREE.Scene;
-  private elevationSlider: HTMLInputElement | null;
-  private elevationValue: HTMLSpanElement | null;
+  private readonly elevationSlider: HTMLInputElement | null;
+  private readonly elevationValue: HTMLSpanElement | null;
 
   constructor(
     scene: THREE.Scene,
