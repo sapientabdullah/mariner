@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { ScoreSystem } from "../progression/scoringSystem";
 import { ImprovedNoise } from "three/examples/jsm/Addons.js";
 import { healthSystem } from "../../main";
+import { loadingManager } from "../managers/loadingManager";
 
 abstract class BaseObstacle {
   protected group: THREE.Group;
@@ -230,8 +231,8 @@ export class ObstacleSystem {
   ) {
     this.scene = scene;
     this.scoreSystem = scoreSystem;
-    this.textureLoader = new THREE.TextureLoader();
-    this.explosionTexture = this.textureLoader.load("/textures/explosion.webp");
+    this.textureLoader = new THREE.TextureLoader(loadingManager);
+    this.explosionTexture = this.textureLoader.load("/textures/explosion.png");
     this.initializeSounds(camera);
     this.spawnObstacles();
   }
