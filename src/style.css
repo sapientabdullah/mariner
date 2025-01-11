@@ -1013,7 +1013,7 @@ input:checked+.toggle-slider:before {
   }
 }
 
-#controls {
+#initial-controls {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -1025,7 +1025,7 @@ input:checked+.toggle-slider:before {
   pointer-events: none;
 }
 
-#controls.visible {
+#initial-controls.visible {
   opacity: 1;
   pointer-events: auto;
 }

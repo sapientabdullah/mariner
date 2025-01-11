@@ -47,7 +47,7 @@ export function isLoadingComplete() {
 }
 
 function showControls() {
-  const controls = document.getElementById("controls");
+  const controls = document.getElementById("initial-controls");
   if (controls) {
     controls.style.display = "block";
     setTimeout(() => {
