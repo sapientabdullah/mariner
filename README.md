@@ -14,9 +14,9 @@
 **Mariner** is an online, endless 3D game set in the vast ocean. Players control a boat armed with a minigun and depth charges as it battles various obstacles such as sharks, sea mines, a warship, and a submarine. The game world features an infinite ocean with islands and dynamic sun movements.
 
 <p align="center">
-	<img src="" alt="Demo">
+	<img src="https://cloud-mw9d2i8c1-hack-club-bot.vercel.app/0screenshot_2025-01-11_at_09.59.45.png" alt="Demo">
 	<br>
-	<a href="">Live demo</a>
+	<a href="https://mariner.vercel.app/">Live demo</a>
 	<br>
 </p>
 
@@ -50,8 +50,8 @@
 
 ## In-Game Shots
 
-![Mariner Screenshot 1]()
-![Mariner Screenshot 2]()
+![Mariner Screenshot 1](https://cloud-oyegyt4aw-hack-club-bot.vercel.app/0screenshot_2025-01-11_at_10.24.09.png)
+![Mariner Screenshot 2](https://cloud-6pvyct8as-hack-club-bot.vercel.app/0screenshot_2025-01-11_at_10.15.03.png)
 
 ## Technologies
 
