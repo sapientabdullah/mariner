@@ -36,17 +36,17 @@
 
 ## Controls
 
-| **Key**             | **Action**                     |
-| ------------------- | ------------------------------ |
-| `W` / `Arrow Up`    | Move Forward                   |
-| `S` / `Arrow Down`  | Move Backward                  |
-| `A` / `Arrow Left`  | Turn Left                      |
-| `D` / `Arrow Right` | Turn Right                     |
-| `P`                 | Pause/Unpause the game         |
-| `Spacebar`          | Drop a bomb                    |
-| `Left Mouse Button` | Fire a bullet                  |
-| `Mouse Movement`    | Aim the turret                 |
-| `Esc`               | Exit pointer lock (pause game) |
+| **Key**             | **Action**             |
+| ------------------- | ---------------------- |
+| `W` / `Arrow Up`    | Move Forward           |
+| `S` / `Arrow Down`  | Move Backward          |
+| `A` / `Arrow Left`  | Turn Left              |
+| `D` / `Arrow Right` | Turn Right             |
+| `P`                 | Pause/Unpause the game |
+| `Spacebar`          | Drop a depth charge    |
+| `Left Mouse Button` | Fire a bullet          |
+| `Mouse Movement`    | Aim the turret         |
+| `Esc`               | Exit pointer lock      |
 
 ## In-Game Shots
 
